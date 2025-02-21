@@ -13,7 +13,7 @@ const server = express()
 server.use(cors())
 
 // ------------------------ handle GET requests ------------------------ 
-server.get("/api/example", (request, response) => {
+server.get("/api/test", (request, response) => {
     response.status(200).send("hi from server")
 });
 
