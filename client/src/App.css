@@ -1,116 +1,164 @@
-/* General Styles */
-body {
-  margin: 0;
-  font-family: 'Arial', sans-serif;
-  background-color: #EDE7F6; /* Pastel Gray */
-  color: #4A148C; /* Dark Purple */
-}
-
-/* Header Styles */
-.header {
+/* Layout and Container */
+.container {
+  padding: 2rem;
+  background-color: #f5f5f5; /* Cream background */
+  min-height: 100vh;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  width: 100%;
-  padding: 15px 30px;
-  background: #a19663; /* Gold */
-  color: #77533e;
-  font-size: 24px;
-  font-weight: bold;
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 70px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  font-family: 'Roboto', sans-serif;
+  color: #333;
 }
 
-.header-title {
-  font-size: 28px;
-  font-weight: bold;
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #3b3b3b; /* Dark gray for the title */
+  text-align: center;
+  letter-spacing: 1px;
 }
 
-.nav-links {
+.form-container {
+  margin-bottom: 2rem;
   display: flex;
-  gap: 20px;
+  flex-direction: column;
+  gap: 1.2rem;
+  width: 100%;
+  max-width: 600px;
+  background-color: #fff; /* White background for the form */
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-.nav-links button {
-  background: transparent;
+/* Add Category Section */
+.add-category-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background-color: #fff;
+  padding: 2rem;
+  margin-top: 3rem;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd; /* Light border around add category */
+}
+
+.add-category-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+/* Inputs and Select */
+.input, .select {
+  border: 1px solid #ccc; /* Soft border color */
+  padding: 0.8rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border 0.3s ease;
+}
+
+/* Focus State */
+.input:focus, .select:focus {
+  border-color: #607d8b; /* Dark faded blue for focus */
+  outline: none;
+}
+
+/* Buttons */
+.button {
+  padding: 0.8rem 1.6rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.add-category-button {
+  background-color: #607d8b; /* Faded dark blue */
+  color: #fff;
+}
+
+.add-expense-button {
+  background-color: #455a64; /* Faded dark slate gray */
+  color: #fff;
+}
+
+.remove-button {
+  background-color: #f44336; /* Red for remove */
+  color: #fff;
+}
+
+.button:hover {
+  transform: scale(1.05);
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+/* Table Styling */
+.table {
+  width: 100%;
+  border-collapse: collapse;
   border: none;
-  font-size: 18px;
-  color: #000000;
-  cursor: pointer;
-  transition: 0.3s ease;
+  margin-top: 1rem;
+  max-width: 900px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.nav-links button:hover {
-  color: #776778; /* Purple */
+.table th, .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0; /* Light border for table rows */
+  text-align: left;
+}
+
+.table th {
+  background-color: #f0f0f0; /* Light gray for table headers */
+  color: #333;
+}
+
+.table td {
+  font-size: 1rem;
+  color: #666; /* Lighter gray for table data */
+}
+
+.table td .remove-button {
+  background-color: transparent;
+  border: none;
+  color: #f44336;
+  cursor: pointer;
+}
+
+.table td .remove-button:hover {
   text-decoration: underline;
 }
 
-/* Adjust main content to not be hidden behind the fixed header */
-.main-container {
-  margin-top: 80px;
-  padding: 20px;
-}
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .form-container {
+    padding: 1.5rem;
+  }
 
+  .input, .select {
+    width: 100%;
+  }
 
-/* Sidebar */
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-right: 20px;
-}
+  .button {
+    width: 100%;
+    padding: 0.8rem;
+  }
 
-.sidebar button {
-  width: 150px;
-  padding: 12px;
-  border: none;
-  background: #59465c; /* Purple */
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: 0.3s ease;
-}
+  .table {
+    width: 100%;
+  }
 
-.sidebar button:hover {
-  background: #9C27B0; /* Darker Purple */
-}
-
-/* Chore List Section */
-.chores-list {
-  flex-grow: 1;
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.chore-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #F3E5F5; /* Light Purple */
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-}
-
-/* Add Chore Button */
-.add-chore-btn {
-  background: #FFD700; /* Gold */
-  border: none;
-  padding: 12px;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: 0.3s ease;
-}
-
-.add-chore-btn:hover {
-  background: #FFB300; /* Darker Gold */
+  .table th, .table td {
+    padding: 0.8rem;
+  }
 }

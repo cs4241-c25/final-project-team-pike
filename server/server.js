@@ -12,6 +12,7 @@ const port = 3000
 const server = express()
 server.use(cors())
 
+// test
 // ------------------------ handle GET requests ------------------------ 
 server.get("/api/example", (request, response) => {
     response.status(200).send("hi from server")

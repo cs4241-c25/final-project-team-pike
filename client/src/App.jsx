@@ -1,94 +1,163 @@
-import { useState } from "react";
-import "./App.css";
+import { useState } from 'react';
+import './App.css'; // Import the custom CSS file
 
-function App() {
-    const [chores, setChores] = useState({
-        Cleaning: [],
-        Kitchen: [],
-        Trash: [],
-        Others: []
-    });
-    const [selectedCategory, setSelectedCategory] = useState("Cleaning");
-    const [showModal, setShowModal] = useState(false);
-    const [newChore, setNewChore] = useState({ name: "", deadline: "", assignee: "", category: "Cleaning" });
+export default function ExpenseTracker() {
+    const [expenses, setExpenses] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [form, setForm] = useState({ description: '', category: '', amount: '', payer: '' });
+    const [newCategory, setNewCategory] = useState('');
+    const [editIndex, setEditIndex] = useState(null); // New state to track the index of the expense being edited
+    const [showRemovePrompt, setShowRemovePrompt] = useState(false); // To show remove confirmation
+    const [removeIndex, setRemoveIndex] = useState(null); // Index of the expense to remove
 
-    const categories = ["Cleaning", "Kitchen", "Trash", "Others"];
+    const addExpense = () => {
+        if (editIndex !== null) {
+            // Update the expense if editing
+            const updatedExpenses = [...expenses];
+            updatedExpenses[editIndex] = { ...form, amount: parseFloat(form.amount) };
+            setExpenses(updatedExpenses);
+            setEditIndex(null); // Reset the edit index after saving
+        } else {
+            // Add new expense
+            setExpenses([...expenses, { ...form, amount: parseFloat(form.amount) }]);
+        }
+        setForm({ description: '', category: '', amount: '', payer: '' });
+    };
 
-    const handleAddChore = () => {
-        setChores({
-            ...chores,
-            [newChore.category]: [...chores[newChore.category], newChore]
+    const removeExpense = () => {
+        // Remove the expense from the list
+        const updatedExpenses = expenses.filter((_, i) => i !== removeIndex);
+        setExpenses(updatedExpenses);
+        setShowRemovePrompt(false); // Close the remove confirmation
+        setRemoveIndex(null); // Reset the index
+    };
+
+    const cancelRemove = () => {
+        setShowRemovePrompt(false); // Close the remove confirmation without removing
+        setRemoveIndex(null); // Reset the index
+    };
+
+    const addCategory = () => {
+        if (newCategory && !categories.includes(newCategory)) {
+            setCategories([...categories, newCategory]);
+            setNewCategory('');
+        }
+    };
+
+    const editExpense = (index) => {
+        const expenseToEdit = expenses[index];
+        setForm({
+            description: expenseToEdit.description,
+            category: expenseToEdit.category,
+            amount: expenseToEdit.amount.toString(),
+            payer: expenseToEdit.payer,
         });
-        setShowModal(false);
-        setNewChore({ name: "", deadline: "", assignee: "", category: "Cleaning" });
+        setEditIndex(index); // Set the index to indicate we're editing this expense
     };
 
     return (
-        <div className="app">
-            <header className="header">
-                <h1 className="header-title">Choremates</h1>
-                <nav className="nav-links">
-                    <button>Dashboard</button>
-                    <button>Expenses</button>
-                    <button>Chores</button>
-                    <button>Groceries</button>
-                    <button>Messages</button>
-                </nav>
-            </header>
-            <div className="content">
-                <div className="sidebar">
-                    {categories.map(category => (
-                        <button key={category} onClick={() => setSelectedCategory(category)}>
+        <div className="container">
+            <h1 className="title">Expense Tracker</h1>
+            <div className="form-container">
+                <input
+                    className="input"
+                    placeholder="Description"
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+                <div className="add-category">
+                    <input
+                        className="input"
+                        placeholder="New Category"
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
+                    />
+                    <button className="button add-category-button" onClick={addCategory}>
+                        Add Category
+                    </button>
+                </div>
+                <select
+                    className="select"
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                >
+                    <option value="">Select Category</option>
+                    {categories.map((category, index) => (
+                        <option key={index} value={category}>
                             {category}
-                        </button>
+                        </option>
                     ))}
-                </div>
-                <div className="chores-list">
-                    <h2>{selectedCategory} Chores</h2>
-                    <ul>
-                        {chores[selectedCategory].map((chore, index) => (
-                            <li key={index}>
-                                <strong>{chore.name}</strong> - {chore.assignee} (Due: {chore.deadline})
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-                <button onClick={() => setShowModal(true)}>Add Chore</button>
+                </select>
+                <input
+                    className="input"
+                    placeholder="Amount"
+                    type="number"
+                    value={form.amount}
+                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                />
+                <input
+                    className="input"
+                    placeholder="Payer"
+                    value={form.payer}
+                    onChange={(e) => setForm({ ...form, payer: e.target.value })}
+                />
+                <button className="button add-expense-button" onClick={addExpense}>
+                    {editIndex !== null ? 'Save Expense' : 'Add Expense'}
+                </button>
             </div>
-            {showModal && (
-                <div className="modal">
-                    <h2>Add a Chore</h2>
-                    <input
-                        type="text"
-                        placeholder="Task Name"
-                        value={newChore.name}
-                        onChange={(e) => setNewChore({...newChore, name: e.target.value})}
-                    />
-                    <input
-                        type="datetime-local"
-                        value={newChore.deadline}
-                        onChange={(e) => setNewChore({...newChore, deadline: e.target.value})}
-                    />
-                    <input
-                        type="text"
-                        placeholder="Assign To"
-                        value={newChore.assignee}
-                        onChange={(e) => setNewChore({...newChore, assignee: e.target.value})}
-                    />
-                    <select
-                        value={newChore.category}
-                        onChange={(e) => setNewChore({...newChore, category: e.target.value})}
-                    >
-                        {categories.map(category => (
-                            <option key={category} value={category}>{category}</option>
-                        ))}
-                    </select>
-                    <button onClick={handleAddChore}>Save</button>
-                    <button onClick={() => setShowModal(false)}>Cancel</button>
+
+            {/* Remove Expense Confirmation Section */}
+            {showRemovePrompt && (
+                <div className="remove-prompt">
+                    <h2>Are you sure you want to remove this expense?</h2>
+                    <button className="button confirm-remove" onClick={removeExpense}>
+                        Yes, Remove
+                    </button>
+                    <button className="button cancel-remove" onClick={cancelRemove}>
+                        No, Cancel
+                    </button>
                 </div>
             )}
+
+            {/* Expenses Table */}
+            <table className="table">
+                <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Payer</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {expenses.map((expense, index) => (
+                    <tr key={index}>
+                        <td>{expense.description}</td>
+                        <td>{expense.category}</td>
+                        <td>${expense.amount.toFixed(2)}</td>
+                        <td>{expense.payer}</td>
+                        <td className="table-actions">
+                            <button
+                                className="button edit-button"
+                                onClick={() => editExpense(index)} // Edit button
+                            >
+                                Edit
+                            </button>
+                            <button
+                                className="button remove-button"
+                                onClick={() => {
+                                    setRemoveIndex(index); // Set the index of the expense to remove
+                                    setShowRemovePrompt(true); // Show remove confirmation
+                                }}
+                            >
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
         </div>
     );
 }
-
-export default App;
