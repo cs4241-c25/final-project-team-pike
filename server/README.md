@@ -2,40 +2,57 @@
 
 ## Database Schema
 
-The MongoDB database is comprised of 3 collections: `users`, `organizations`, and `tasks`. The schema for each collection is as follows:
+The database for this project is a SQLite database (`db.sqlite`). The schema is as follows: 
 
-### Users
-- id
-- orgID
-- real name
-- github username (via OAuth)
-- Profile Picture (URL)
-- preferences (map of task type to numerical ranking)
+### Users (table)
+- github (text, primary key) (from github oAuth)
+- realName (text)
+- orgID (int, foreign key)
+- profilePic (text)
 
-### Organizations
-- id
-- name
-- members (array of user ids)
-- organizer (user id)
-- task types (array of strings)
-- tasks (array of Task ids)
+### Preferences (table)
+A separate table as preferences can be arbitrary values and change frequently
+- userID (text, foreign key)
+- taskType (text, primary key)
+- rank (int)
 
-### Tasks
-- id
-- type
-- name
-- description
-- schedule
-- orgID
-- instances (array of TaskInstance ids)
+### Organizations (table)
+- id (int, primary key)
+- name (text)
+- organizerID (text, foreign key)
 
-### TaskInstances
-- id
-- taskID
-- assignee (user id)
-- due date
-- status (enum: `unassigned`, `assigned`, `completed`, `cancelled`)
+### TaskTypes (table)
+- id (int, primary key)
+- name (text)
+- orgID (int, foreign key)
 
+### Tasks (table)
+- id (int, primary key)
+- typeID (int, foreign key)
+- name (text)
+- orgID (int, foreign key)
+- description (text)
+- schedule (text)
+
+### TaskInstances (table)
+- id (int, primary key)
+- taskID (int, foreign key)
+- assigneeID (text, foreign key)
+- dueDate (text)
+- status (text)
+- completedDate (text)
+
+### Inventory (table)
+- id (int, primary key)
+- orgID (int, foreign key)
+- itemName (text)
+- quantity (int)
+- purchaseDate (text)
+- expirationDate (text)
+- location (text)
+- notes (text)
+
+Note: Schedule formatting is a string of the form `RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR;UNTIL=20201231T235959Z` (RFC 5545)
 
 ## API Endpoints
 All endpoints require a valid user session cookie unless otherwise noted.
