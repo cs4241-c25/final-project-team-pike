@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './App.css'; // Import the custom CSS file
+import './Expense.css'; // Import the custom CSS file
 
 export default function ExpenseTracker() {
     const [expenses, setExpenses] = useState([]);
