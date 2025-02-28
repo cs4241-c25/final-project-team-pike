@@ -120,10 +120,16 @@ server.post("/api/tasks/create",
             response.status(400).send("Organization identifier invalid")
         }
         // check that the task type is valid for this organization
-        const type = await dbGet("SELECT * FROM TaskTypes WHERE orgID = ? AND name = ?", orgID, task.type)
-
-
-
+        const typeRow = await dbGet("SELECT * FROM TaskTypes WHERE orgID = ? AND name = ?", orgID, task.type)
+        if (!typeRow) {
+            response.status(400).send("Invalid task type")
+        }
+        try {
+            await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?, ?)",
+                orgID, task.title, task.description, typeRow.id, task.schedule)
+        } catch (e) {
+            response.status(500).send("Error creating task: " + e)
+        }
         response.status(200).send("task created")
     });
 
