@@ -125,6 +125,29 @@ server.get("/api/user/:github", ensureAuth, async (request, response) => {
     });
 });
 
+server.get("/api/org/:orgID/users", ensureAuth, async (request, response) => {
+    const orgID = request.params.orgID
+    const users = await dbAll("SELECT * FROM Users WHERE orgID = ?", orgID)
+    if (!users) {
+        response.status(404).send("{error: 'No users found for organization'" +
+            ", orgID: " + orgID + "}")
+    }
+    let isMember = false
+    let out = []
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].github === request.user.username) {
+            isMember = true
+        }
+        out.push("{realName: " + users[i].realName + ", github: " + users[i].github + "}")
+    }
+    if (!isMember) {
+        response.status(403).send("{error: 'Requesting user not a member of organization'" +
+            ", orgID: " + orgID + "}")
+    }
+
+    response.status(200).send("{users: " + out + "}");
+});
+
 // ------------------------ handle POST requests ------------------------ 
 
 // create new user (called during first login)
