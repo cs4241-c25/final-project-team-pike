@@ -157,6 +157,26 @@ server.post("/api/user/create",
     }
 );
 
+server.post("/api/user/enroll",
+    ensureAuth,
+    body("orgID").isInt(),
+    async (request, response) => {
+        const orgID = request.body.orgID
+        const userRecord = await dbGet("SELECT * FROM Users WHERE github = ?", request.user.username)
+        if (!userRecord) {
+            response.status(400).send("{error: 'User does not exist'}")
+        }
+        if (userRecord.orgID){
+            response.status(400).send("{error: 'User already enrolled', orgID: " + userRecord.orgID + "}")
+        }
+        try {
+            await dbRun("UPDATE Users SET orgID = ? WHERE github = ?", orgID, request.user.username)
+        } catch (e) {
+            response.status(500).send("{error: " + e + "}")
+        }
+        response.status(200).send("{message: 'user enrolled'}")
+    });
+
 server.post("/api/org/create",
     ensureAuth,
     body("name").isString().escape(),
