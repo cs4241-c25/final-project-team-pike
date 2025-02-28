@@ -124,8 +124,38 @@ server.get("/api/user", ensureAuth, async (request, response) => {
     });
 });
 
+server.get("/api/user/:github", ensureAuth, async (request, response) => {
+    // retrieve real name and profile pic
+    const record = await dbGet("SELECT (realName, profilePic) FROM Users WHERE github = ?", request.params.github);
+    if (!record) {
+        response.status(404).send("User does not exist!")
+    }
+    response.status(200).send({
+        realName: record.realName,
+        profilePic: record.profilePic
+    });
+});
+
 // ------------------------ handle POST requests ------------------------ 
 
+
+server.post("/api/user/create",
+    body("realName").isString().escape(),
+    body("github").isString().escape(),
+    async (request, response) => {
+        const user = request.body
+        const existing = await dbGet("SELECT * FROM Users WHERE github = ?", user.github)
+        if (existing) {
+            response.status(400).send("User already exists")
+        }
+        try {
+            await dbRun("INSERT INTO Users (realName, github) VALUES (?, ?)", user.realName, user.github)
+        } catch (e) {
+            response.status(500).send("Error creating user: " + e)
+        }
+        response.status(200).send("user created")
+    }
+);
 
 server.post("/api/tasks/create",
     ensureAuth,
