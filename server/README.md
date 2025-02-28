@@ -80,7 +80,7 @@ All endpoints require a valid user session cookie unless otherwise noted.
 - Create a new user
 - Request body: `{realName: string, github: string}`
 
-`/api/user/enroll` - POST
+`/api/user/enroll` - POST ✅
 - Enroll a user in an organization
 - Request body: `{orgID: string}`
 
