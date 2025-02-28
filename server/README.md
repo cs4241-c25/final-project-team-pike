@@ -57,11 +57,11 @@ Note: Schedule formatting is a string of the form `RRULE:FREQ=WEEKLY;BYDAY=MO,WE
 ## API Endpoints
 All endpoints require a valid user session cookie unless otherwise noted.
 
-`/api/user` - GET
+`/api/user` - GET ✅
 - Get the current user's information
 - Returns: `{realName: string, github: string, profilePic: string, preferences: [{type: taskTypeID, rank: int}]}`
 
-`/api/user/{id}` - GET
+`/api/user/{id}` - GET ✅
 - Get a different user's information by ID
 - Returns: `{realName: string, profilePic: string}`
 
@@ -89,7 +89,7 @@ All endpoints require a valid user session cookie unless otherwise noted.
 - Get all tasks in an organization
 - Returns: `{tasks: [task]}`
 
-`/api/tasks/create` - POST
+`/api/tasks/create` - POST ✅
 - Create a new task
 - orgID derived from user auth cookie
 - Request body: `{type: string, name: string, description: string, schedule: string (optional)}`
