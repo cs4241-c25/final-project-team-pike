@@ -1,0 +1,116 @@
+/* General Styles */
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #EDE7F6; /* Pastel Gray */
+  color: #4A148C; /* Dark Purple */
+}
+
+/* Header Styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 15px 30px;
+  background: #a19663; /* Gold */
+  color: #77533e;
+  font-size: 24px;
+  font-weight: bold;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 70px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.header-title {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-links button {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: #000000;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.nav-links button:hover {
+  color: #776778; /* Purple */
+  text-decoration: underline;
+}
+
+/* Adjust main content to not be hidden behind the fixed header */
+.main-container {
+  margin-top: 80px;
+  padding: 20px;
+}
+
+
+/* Sidebar */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-right: 20px;
+}
+
+.sidebar button {
+  width: 150px;
+  padding: 12px;
+  border: none;
+  background: #59465c; /* Purple */
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.3s ease;
+}
+
+.sidebar button:hover {
+  background: #9C27B0; /* Darker Purple */
+}
+
+/* Chore List Section */
+.chores-list {
+  flex-grow: 1;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.chore-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #F3E5F5; /* Light Purple */
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+/* Add Chore Button */
+.add-chore-btn {
+  background: #FFD700; /* Gold */
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.3s ease;
+}
+
+.add-chore-btn:hover {
+  background: #FFB300; /* Darker Gold */
+}
