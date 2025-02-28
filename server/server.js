@@ -89,16 +89,14 @@ async function orgLookup(username) {
     return await dbGet("SELECT orgID FROM Users WHERE github = ?", username)
 }
 
-// ------------------------ handle GET requests ------------------------ 
-server.get("/api/test", (request, response) => {
-    response.status(200).send("hi from server")
-});
+// ------------------------ handle GET requests ------------------------
 
 // Return current user's info
 server.get("/api/user", ensureAuth, async (request, response) => {
     const record = await dbGet("SELECT * FROM Users WHERE github = ?", request.user.username);
     if (!record) {
-        response.status(404).send("User does not exist!")
+        response.status(404).send("{error: 'User does not exist'" +
+            ", username: " + request.params.github + "}")
     }
     const prefs = await dbAll("SELECT * FROM Preferences WHERE userID = ?", record.id);
     let prefArr = []
@@ -113,11 +111,13 @@ server.get("/api/user", ensureAuth, async (request, response) => {
     });
 });
 
+// return another user's profile info
 server.get("/api/user/:github", ensureAuth, async (request, response) => {
     // retrieve real name and profile pic
     const record = await dbGet("SELECT (realName, profilePic) FROM Users WHERE github = ?", request.params.github);
     if (!record) {
-        response.status(404).send("User does not exist!")
+        response.status(404).send("{error: 'User does not exist'" +
+            ", username: " + request.params.github + "}")
     }
     response.status(200).send({
         realName: record.realName,
@@ -127,7 +127,7 @@ server.get("/api/user/:github", ensureAuth, async (request, response) => {
 
 // ------------------------ handle POST requests ------------------------ 
 
-
+// create new user (called during first login)
 server.post("/api/user/create",
     body("realName").isString().escape(),
     body("github").isString().escape(),
@@ -146,6 +146,26 @@ server.post("/api/user/create",
     }
 );
 
+server.post("/api/org/create",
+    ensureAuth,
+    body("name").isString().escape(),
+    body("description").isString().escape(),
+    async (request, response) => {
+        const org = request.body
+        const existing = await dbGet("SELECT * FROM Organizations WHERE name = ?", org.name)
+        if (existing) {
+            response.status(400).send("{ error: Already exists" +
+                ", orgID: " + existing.id + " }")
+        }
+        try {
+            await dbRun("INSERT INTO Organizations (name) VALUES (?)", org.name)
+        } catch (e) {
+            response.status(500).send("{error: " + e + "}")
+        }
+        response.status(200).send("{message: 'organization created'}")
+    }
+);
+
 server.post("/api/tasks/create",
     ensureAuth,
     body('title').isString().escape(),
@@ -156,20 +176,20 @@ server.post("/api/tasks/create",
         const task = request.body
         const orgID = await orgLookup(request.user.username)
         if (!orgID) {
-            response.status(400).send("Organization identifier invalid")
+            response.status(400).send("{ error: 'Organization identifier invalid'}")
         }
         // check that the task type is valid for this organization
         const typeRow = await dbGet("SELECT * FROM TaskTypes WHERE orgID = ? AND name = ?", orgID, task.type)
         if (!typeRow) {
-            response.status(400).send("Invalid task type")
+            response.status(400).send("{error: 'Invalid task type'}")
         }
         try {
             await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?, ?)",
                 orgID, task.title, task.description, typeRow.id, task.schedule)
         } catch (e) {
-            response.status(500).send("Error creating task: " + e)
+            response.status(500).send("{error: " + e + "}")
         }
-        response.status(200).send("task created")
+        response.status(200).send("{message: 'task created'}")
     });
 
 
