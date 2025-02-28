@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./App.css";
+import "./Chore.css";
 
 function App() {
     const [chores, setChores] = useState({
@@ -32,7 +32,6 @@ function App() {
                     <button>Expenses</button>
                     <button>Chores</button>
                     <button>Groceries</button>
-                    <button>Messages</button>
                 </nav>
             </header>
             <div className="content">
@@ -90,5 +89,6 @@ function App() {
         </div>
     );
 }
+
 
 export default App;
