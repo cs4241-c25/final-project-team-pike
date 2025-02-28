@@ -59,7 +59,7 @@ All endpoints require a valid user session cookie unless otherwise noted.
 
 `/api/user` - GET
 - Get the current user's information
-- Returns: `{realName: string, github: string, profilePic: string, preferences: {taskType: number}}`
+- Returns: `{realName: string, github: string, profilePic: string, preferences: [{type: taskTypeID, rank: int}]}`
 
 `/api/user/{id}` - GET
 - Get a different user's information by ID

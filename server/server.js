@@ -105,10 +105,30 @@ server.get("/api/test", (request, response) => {
     response.status(200).send("hi from server")
 });
 
+// Return current user's info
+server.get("/api/user", ensureAuth, async (request, response) => {
+    const record = await dbGet("SELECT * FROM Users WHERE github = ?", request.user.username);
+    if (!record) {
+        response.status(404).send("User does not exist!")
+    }
+    const prefs = await dbAll("SELECT * FROM Preferences WHERE userID = ?", record.id);
+    let prefArr = []
+    for (let i = 0; i < prefs.length; i++) {
+        prefArr.push("{type: " + prefs[i].PrefKey + ", rank: " + prefs[i].PrefValue + "}")
+    }
+    response.status(200).send({
+        realName: record.realName,
+        github: record.github,
+        profilePic: record.profilePic,
+        preferences: prefArr
+    });
+});
+
 // ------------------------ handle POST requests ------------------------ 
 
 
 server.post("/api/tasks/create",
+    ensureAuth,
     body('title').isString().escape(),
     body('description').isString().escape(),
     body('type').isString().escape(),
