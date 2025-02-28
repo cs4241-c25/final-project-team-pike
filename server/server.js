@@ -4,12 +4,15 @@ const passport = require("passport")
 const dotenv = require("dotenv").config()
 const session = require("express-session")
 const GitHubStrategy = require("passport-github2").Strategy
-const { query, body, validationResult } = require('express-validator');
+const {query, body, validationResult} = require('express-validator');
 const sqlite3 = require('sqlite3')
+const { promisify } = require('util');
 // constants
 const port = 3000
 const db = new sqlite3.Database('db.sqlite')
-
+const dbGet = promisify(db.get).bind(db);
+const dbAll = promisify(db.all).bind(db);
+const dbRun = promisify(db.run).bind(db);
 const {
     GITHUB_CLIENT_ID,
     GITHUB_CLIENT_SECRET,
@@ -32,7 +35,7 @@ server.use(express.json())
 
 // login, auth, and logout
 passport.serializeUser(function (user, done) {
-    done(null, { username: user.username, id: user.id })
+    done(null, {username: user.username, id: user.id})
 })
 
 passport.deserializeUser(function (obj, done) {
@@ -50,9 +53,9 @@ passport.use(new GitHubStrategy({
     }
 ))
 
-server.get("/auth/github", passport.authenticate("github", { scope: ["user:email"] }))
-server.get("/auth/github/callback", 
-    passport.authenticate("github", { session: true, failureRedirect: "" /* TODO */ }),
+server.get("/auth/github", passport.authenticate("github", {scope: ["user:email"]}))
+server.get("/auth/github/callback",
+    passport.authenticate("github", {session: true, failureRedirect: "" /* TODO */}),
     function (req, res) {
         // TODO redirect to next page (success)
     }
@@ -75,9 +78,16 @@ server.get("/login", (req, res) => {
 })
 
 server.get("/logout", (req, res) => {
-    req.logout(() => { })
+    req.logout(() => {
+    })
     // TODO redirect to login
 })
+
+// ------------------------ db helper functions ------------------------
+// lookup a user's associated organization
+async function orgLookup(username) {
+    return await dbGet("SELECT orgID FROM Users WHERE github = ?", username)
+}
 
 // ------------------------ handle GET requests ------------------------ 
 server.get("/api/test", (request, response) => {
@@ -86,22 +96,25 @@ server.get("/api/test", (request, response) => {
 
 // ------------------------ handle POST requests ------------------------ 
 
+
 server.post("/api/tasks/create",
-    body('title').isString(),
-    body('description').isString(),
-    body('type').isString(),
+    body('title').isString().escape(),
+    body('description').isString().escape(),
+    body('type').isString().escape(),
     body('schedule').optional().isString(),
-    body('endDate').optional().isString(),
     async (request, response) => {
-    const task = request.body
-    // sanity check fields of request exist
-    if (!task.title || !task.description || !task.type) {
-        response.status(400).send("missing fields")
-    }
+        const task = request.body
+        const orgID = await orgLookup(request.user.username)
+        if (!orgID) {
+            response.status(400).send("Organization identifier invalid")
+        }
+        // check that the task type is valid for this organization
+        const type = await dbGet("SELECT * FROM TaskTypes WHERE orgID = ? AND name = ?", orgID, task.type)
 
 
-    response.status(200).send("task created")
-});
+
+        response.status(200).send("task created")
+    });
 
 
 // ------------------------ start server ------------------------ 
@@ -110,4 +123,6 @@ async function startServer() {
         console.log(`Server is running on port ${port}`)
     });
 }
-startServer().then(() => {}) // then to avoid unhandled promise rejection warning
+
+startServer().then(() => {
+}) // then to avoid unhandled promise rejection warning

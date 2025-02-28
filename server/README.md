@@ -92,11 +92,11 @@ All endpoints require a valid user session cookie unless otherwise noted.
 `/api/tasks/create` - POST
 - Create a new task
 - orgID derived from user auth cookie
-- Request body: `{type: string, name: string, description: string, schedule: string (optional), endDate: string (optional)}`
+- Request body: `{type: string, name: string, description: string, schedule: string (optional)}`
 
 `/api/tasks/{taskID}` - GET
 - Get a task by ID
-- Returns: `{type: string, name: string, description: string, schedule: string, endDate: string}`
+- Returns: `{type: string, name: string, description: string, schedule: string}`
 
 `/api/tasks/{taskID}/instances` - GET
 - Get all instances of a task
