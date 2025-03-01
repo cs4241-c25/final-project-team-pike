@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from 'react-router-dom';
 import "./Chore.css";
 
 function App() {
@@ -28,10 +29,10 @@ function App() {
             <header className="header">
                 <h1 className="header-title">Choremates</h1>
                 <nav className="nav-links">
-                    <button>Dashboard</button>
-                    <button>Expenses</button>
-                    <button>Chores</button>
-                    <button>Groceries</button>
+                    <button><Link to="/">Login</Link></button>
+                    <button><Link to="/chores">Chores</Link></button>
+                    <button><Link to="/expense-tracker">Expenses</Link></button>
+                    <button><Link to="/grocery-tracker">Groceries</Link></button>
                 </nav>
             </header>
             <div className="content">

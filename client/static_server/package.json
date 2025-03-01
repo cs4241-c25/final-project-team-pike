@@ -1,0 +1,25 @@
+{
+    "name": "cs-4241-c25-team-p-final-project-static-file-server",
+    "version": "0.1.0",
+    "description": "WPI CS4241-C25 Team P Final Project Static File Server",
+    "author": "Team P",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "engines": {
+        "node": "22.x"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "express-session": "^1.18.1",
+        "express-validator": "^7.2.1",
+        "mongodb": "^6.13.0",
+        "passport": "^0.7.0",
+        "passport-github2": "^0.1.12",
+        "path": "^0.12.7",
+        "sqlite3": "^5.1.7"
+    },
+    "homepage": "http://localhost:8080"
+}

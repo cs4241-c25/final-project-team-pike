@@ -6,6 +6,7 @@ const session = require("express-session")
 const GitHubStrategy = require("passport-github2").Strategy
 const { query, body, validationResult } = require('express-validator');
 const sqlite3 = require('sqlite3')
+
 // constants
 const port = 3000
 const db = new sqlite3.Database('db.sqlite')
@@ -52,9 +53,11 @@ passport.use(new GitHubStrategy({
 
 server.get("/auth/github", passport.authenticate("github", { scope: ["user:email"] }))
 server.get("/auth/github/callback", 
-    passport.authenticate("github", { session: true, failureRedirect: "" /* TODO */ }),
+    passport.authenticate("github", { session: true, failureRedirect: "/login"}),
     function (req, res) {
-        // TODO redirect to next page (success)
+        res.status(200).json({loginStatus: "success"})
+        // TODO redirect to the dashboard page (success code 200)
+        // TODO redirect to the create profile page (success code 201)
     }
 )
 
@@ -63,20 +66,24 @@ function ensureAuth(req, res, next) {
         next()
     } else {
         // TODO redirect to login
+        res.redirect("/login")
     }
 }
 
 server.get("/login", (req, res) => {
     if (req.user) {
-        // TODO redirect to next page (success)
+        // TODO send login success code
+        res.status(200).json({loginStatus: "success"})
     } else {
-        // TODO redirect to login
+        // TODO send login error code
+        res.status(401).json({loginStatus: "failure"})
     }
 })
 
 server.get("/logout", (req, res) => {
     req.logout(() => { })
     // TODO redirect to login
+    res.redirect("/login")
 })
 
 // ------------------------ handle GET requests ------------------------ 
