@@ -55,7 +55,8 @@ server.get("/auth/github", passport.authenticate("github", { scope: ["user:email
 server.get("/auth/github/callback", 
     passport.authenticate("github", { session: true, failureRedirect: "/login"}),
     function (req, res) {
-        res.status(200).json({loginStatus: "success"})
+        // res.status(200).json({loginStatus: "success"})
+        res.redirect("http://localhost:5173/chores")
         // TODO redirect to the dashboard page (success code 200)
         // TODO redirect to the create profile page (success code 201)
     }
