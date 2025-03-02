@@ -92,11 +92,11 @@ All endpoints require a valid user session cookie unless otherwise noted.
 - Create a new organization
 - Request body: `{name: string, description: string}`
 
-`/api/org/{orgID}/users` - GET
+`/api/org/{orgID}/users` - GET ✅
 - Get all users in an organization
 - Returns: `{users: [user]}`
 
-`/api/org/{orgID}/tasks` - GET
+`/api/org/{orgID}/tasks` - GET ✅
 - Get all tasks in an organization
 - Returns: `{tasks: [task]}`
 

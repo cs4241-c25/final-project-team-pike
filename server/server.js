@@ -156,7 +156,17 @@ server.get("/api/org/:orgID/users", ensureAuth, async (request, response) => {
             ", orgID: " + orgID + "}")
     }
 
-    response.status(200).send("{users: " + out + "}");
+    response.status(200).json(out);
+});
+
+server.get("/api/org/:orgID/tasks", ensureAuth, async (request, response) => {
+    const orgID = request.params.orgID
+    const tasks = await dbAll("SELECT * FROM Tasks WHERE orgID = ?", orgID)
+    if (!tasks) {
+        response.status(404).send("{error: 'No tasks found for organization'" +
+            ", orgID: " + orgID + "}")
+    }
+    response.status(200).json(tasks);
 });
 
 // ------------------------ handle POST requests ------------------------ 
