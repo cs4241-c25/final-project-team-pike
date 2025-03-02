@@ -54,14 +54,15 @@ passport.use(new GitHubStrategy({
     }
 ))
 
-server.get("/auth/github", passport.authenticate("github", {scope: ["user:email"]}))
-server.get("/auth/github/callback",
-    passport.authenticate("github", {session: true, failureRedirect: "" /* TODO */}),
 server.get("/auth/github", passport.authenticate("github", { scope: ["user:email"] }))
 server.get("/auth/github/callback",
     passport.authenticate("github", { session: true, failureRedirect: "/login"}),
     function (req, res) {
-        // res.status(200).json({loginStatus: "success"})
+        // check if user exists in database
+        const userRecord = dbGet("SELECT * FROM Users WHERE github = ?", req.user.username)
+        if (!userRecord) {
+            res.redirect("http://localhost:5173/signup")
+        }
         res.redirect("http://localhost:5173/chores")
         // TODO redirect to the dashboard page (success code 200)
         // TODO redirect to the create profile page (success code 201)
@@ -88,8 +89,7 @@ server.get("/login", (req, res) => {
 })
 
 server.get("/logout", (req, res) => {
-    req.logout(() => {
-    })
+    req.logout(() => { })
     // TODO redirect to login
     res.redirect("/login")
 })
@@ -125,7 +125,7 @@ server.get("/api/user", ensureAuth, async (request, response) => {
 // return another user's profile info
 server.get("/api/user/:github", ensureAuth, async (request, response) => {
     // retrieve real name and profile pic
-    const record = await dbGet("SELECT (realName, profilePic) FROM Users WHERE github = ?", request.params.github);
+    const record = await dbGet("SELECT realName, profilePic FROM Users WHERE github = ?", request.params.github);
     if (!record) {
         response.status(404).send("{error: 'User does not exist'" +
             ", username: " + request.params.github + "}")
@@ -140,8 +140,8 @@ server.get("/api/org/:orgID/users", ensureAuth, async (request, response) => {
     const orgID = request.params.orgID
     const users = await dbAll("SELECT * FROM Users WHERE orgID = ?", orgID)
     if (!users) {
-        response.status(404).send("{error: 'No users found for organization'" +
-            ", orgID: " + orgID + "}")
+        response.status(404).json({error: 'No users found for organization',
+            orgID: orgID})
     }
     let isMember = false
     let out = []
@@ -179,14 +179,14 @@ server.post("/api/user/create",
         const user = request.body
         const existing = await dbGet("SELECT * FROM Users WHERE github = ?", user.github)
         if (existing) {
-            response.status(400).send("User already exists")
+            response.status(400).json({error: "User already exists"})
         }
         try {
             await dbRun("INSERT INTO Users (realName, github) VALUES (?, ?)", user.realName, user.github)
         } catch (e) {
-            response.status(500).send("Error creating user: " + e)
+            response.status(500).json({error: e})
         }
-        response.status(200).send("user created")
+        response.status(200).json({message: "user created"})
     }
 );
 
@@ -197,17 +197,17 @@ server.post("/api/user/enroll",
         const orgID = request.body.orgID
         const userRecord = await dbGet("SELECT * FROM Users WHERE github = ?", request.user.username)
         if (!userRecord) {
-            response.status(400).send("{error: 'User does not exist'}")
+            response.status(400).json({error: 'User does not exist'})
         }
         if (userRecord.orgID){
-            response.status(400).send("{error: 'User already enrolled', orgID: " + userRecord.orgID + "}")
+            response.status(400).json({error: 'User already enrolled', orgID: " + userRecord.orgID + "})
         }
         try {
             await dbRun("UPDATE Users SET orgID = ? WHERE github = ?", orgID, request.user.username)
         } catch (e) {
-            response.status(500).send("{error: " + e + "}")
+            response.status(500).json({error: " + e + "})
         }
-        response.status(200).send("{message: 'user enrolled'}")
+        response.status(200).json({message: 'user enrolled'})
     });
 
 server.post("/api/org/create",
@@ -218,15 +218,14 @@ server.post("/api/org/create",
         const org = request.body
         const existing = await dbGet("SELECT * FROM Organizations WHERE name = ?", org.name)
         if (existing) {
-            response.status(400).send("{ error: Already exists" +
-                ", orgID: " + existing.id + " }")
+            response.status(400).json({ error: "Already exists", orgID: existing.id })
         }
         try {
             await dbRun("INSERT INTO Organizations (name) VALUES (?)", org.name)
         } catch (e) {
-            response.status(500).send("{error: " + e + "}")
+            response.status(500).json({error: e})
         }
-        response.status(200).send("{message: 'organization created'}")
+        response.status(200).json({message: 'organization created'})
     }
 );
 
@@ -240,20 +239,20 @@ server.post("/api/tasks/create",
         const task = request.body
         const orgID = await orgLookup(request.user.username)
         if (!orgID) {
-            response.status(400).send("{ error: 'Organization identifier invalid'}")
+            response.status(400).json({ error: 'Organization identifier invalid'})
         }
         // check that the task type is valid for this organization
         const typeRow = await dbGet("SELECT * FROM TaskTypes WHERE orgID = ? AND name = ?", orgID, task.type)
         if (!typeRow) {
-            response.status(400).send("{error: 'Invalid task type'}")
+            response.status(400).json({error: 'Invalid task type'})
         }
         try {
             await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?, ?)",
                 orgID, task.title, task.description, typeRow.id, task.schedule)
         } catch (e) {
-            response.status(500).send("{error: " + e + "}")
+            response.status(500).json({error: e})
         }
-        response.status(200).send("{message: 'task created'}")
+        response.status(200).json({message: 'task created'})
     });
 
 
