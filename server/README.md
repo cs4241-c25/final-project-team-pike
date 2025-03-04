@@ -10,12 +10,6 @@ The database for this project is a SQLite database (`db.sqlite`). The schema is 
 - orgID (int, foreign key)
 - profilePic (text)
 
-### Preferences (table)
-A separate table as preferences can be arbitrary values and change frequently
-- userID (text, foreign key)
-- taskType (text, primary key)
-- rank (int)
-
 ### Organizations (table)
 - id (int, primary key)
 - name (text)
@@ -59,19 +53,19 @@ All endpoints require a valid user session cookie unless otherwise noted.
 
 `/api/user` - GET ✅ 
 - Get the current user's information
-- Returns: `{realName: string, github: string, profilePic: string, preferences: [{type: taskTypeID, rank: int}]}`
+- Returns: `{realName: string, github: string, profilePic: string}`
 
 `/api/user/by-id/{id}` - GET ✅
 - Get a different user's information by ID
 - Returns: `{realName: string, profilePic: string}`
 
-`/api/user/by-id/{id}/photo` - POST
-- Update or set the user's profile picture
+`/api/pictures/user/{id}` - POST & GET
+- Update, set, or get the user's profile picture
 - File upload
 - Returns: Ok if successful
 
-`/api/pictures/org/{id}` - POST
-- Update or set the user's profile picture
+`/api/pictures/org/{id}` - POST & GET
+- Update, set, or get the user's profile picture
 - File upload
 - Returns: Ok if successful
 
@@ -84,7 +78,7 @@ All endpoints require a valid user session cookie unless otherwise noted.
 - Enroll a user in an organization
 - Request body: `{orgID: string}`
 
-`/api/user/tasks` - GET
+`/api/user/tasks` - GET ✅
 - Get all tasks instances assigned to the current user
 - Returns: `[taskInstance]`
 
@@ -110,7 +104,7 @@ All endpoints require a valid user session cookie unless otherwise noted.
 - orgID derived from user auth cookie
 - Request body: `{type: string, name: string, description: string, schedule: string (optional)}`
 
-`/api/tasks/{taskID}` - GET
+`/api/tasks/{taskID}` - GET ✅
 - Get a task by ID
 - Returns: `{type: string, name: string, description: string, schedule: string}`
 
