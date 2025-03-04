@@ -110,7 +110,7 @@ All endpoints require a valid user session cookie unless otherwise noted.
 - orgID derived from user auth cookie
 - Request body: `{type: string, name: string, description: string, schedule: string (optional)}`
 
-`/api/tasks/{taskID}` - GET
+`/api/tasks/{taskID}` - GET ✅
 - Get a task by ID
 - Returns: `{type: string, name: string, description: string, schedule: string}`
 

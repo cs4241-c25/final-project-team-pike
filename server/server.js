@@ -204,6 +204,10 @@ server.get("/api/tasks/:taskID", ensureAuth, async (request, response) => {
     response.status(200).json(task);
 });
 
+server.get("/api/tasks/:taskID/instances", ensureAuth, async (request, response) => {
+    const taskID = request.params.taskID
+})
+
 // ------------------------ handle POST requests ------------------------ 
 
 // create new user (called during first login)
