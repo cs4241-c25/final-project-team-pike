@@ -23,10 +23,10 @@ CREATE TABLE IF NOT EXISTS Preferences
 (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     userID    TEXT NOT NULL,
-    TaskType   INTEGER NOT NULL,
-    PrefValue INTEGER NOT NULL,
+    TaskID    INTEGER NOT NULL,
+    Rank      INTEGER NOT NULL,
     FOREIGN KEY (userID) REFERENCES Users (github),
-    FOREIGN KEY (TaskType) REFERENCES TaskTypes (id)
+    FOREIGN KEY (TaskID) REFERENCES Tasks (id)
 );
 
 CREATE TABLE IF NOT EXISTS TaskTypes
