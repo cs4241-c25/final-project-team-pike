@@ -1,3 +1,4 @@
+@import "tailwindcss";
 /* Layout and Container */
 .container {
     padding: 2rem;
