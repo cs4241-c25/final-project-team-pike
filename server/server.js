@@ -74,17 +74,14 @@ function ensureAuth(req, res, next) {
     if (req.isAuthenticated()) {
         next()
     } else {
-        // TODO redirect to login
-        res.redirect(FRONTEND+"/login")
+        res.redirect(FRONTEND+"/")
     }
 }
 
 server.get("/login", (req, res) => {
     if (req.user) {
-        // TODO send login success code
         res.redirect(FRONTEND+"/chores")
     } else {
-        // TODO send login error code
         res.redirect(FRONTEND+"/")
     }
 })
