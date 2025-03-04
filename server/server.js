@@ -82,10 +82,10 @@ function ensureAuth(req, res, next) {
 server.get("/login", (req, res) => {
     if (req.user) {
         // TODO send login success code
-        res.status(200).json({loginStatus: "success"})
+        res.redirect(FRONTEND+"/chores")
     } else {
         // TODO send login error code
-        res.status(401).json({loginStatus: "failure"})
+        res.redirect(FRONTEND+"/")
     }
 })
 
