@@ -10,12 +10,6 @@ The database for this project is a SQLite database (`db.sqlite`). The schema is 
 - orgID (int, foreign key)
 - profilePic (text)
 
-### Preferences (table)
-A separate table as preferences can be arbitrary values and change frequently
-- userID (text, foreign key)
-- taskType (text, primary key)
-- rank (int)
-
 ### Organizations (table)
 - id (int, primary key)
 - name (text)
@@ -59,7 +53,7 @@ All endpoints require a valid user session cookie unless otherwise noted.
 
 `/api/user` - GET ✅ 
 - Get the current user's information
-- Returns: `{realName: string, github: string, profilePic: string, preferences: [{type: taskTypeID, rank: int}]}`
+- Returns: `{realName: string, github: string, profilePic: string}`
 
 `/api/user/by-id/{id}` - GET ✅
 - Get a different user's information by ID

@@ -110,16 +110,11 @@ server.get("/api/user", ensureAuth, async (request, response) => {
         response.status(404).json({error: "User does not exist", username: request.params.github})
         return
     }
-    const prefs = await dbAll("SELECT * FROM Preferences WHERE userID = ?", record.id);
-    let prefArr = []
-    for (let i = 0; i < prefs.length; i++) {
-        prefArr.push("{type: " + prefs[i].PrefKey + ", rank: " + prefs[i].PrefValue + "}")
-    }
+
     response.status(200).send({
         realName: record.realName,
         github: record.github,
         profilePic: record.profilePic,
-        preferences: prefArr
     });
 });
 
