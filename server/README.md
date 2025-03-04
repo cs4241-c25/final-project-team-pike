@@ -57,19 +57,30 @@ Note: Schedule formatting is a string of the form `RRULE:FREQ=WEEKLY;BYDAY=MO,WE
 ## API Endpoints
 All endpoints require a valid user session cookie unless otherwise noted.
 
-`/api/user` - GET
+`/api/user` - GET ✅ 
 - Get the current user's information
-- Returns: `{realName: string, github: string, profilePic: string, preferences: {taskType: number}}`
+- Returns: `{realName: string, github: string, profilePic: string, preferences: [{type: taskTypeID, rank: int}]}`
 
-`/api/user/{id}` - GET
+`/api/user/by-id/{id}` - GET ✅
 - Get a different user's information by ID
 - Returns: `{realName: string, profilePic: string}`
 
-`/api/user/create` - POST
+`/api/user/by-id/{id}/photo` - POST
+- Update or set the user's profile picture
+- File upload
+- Returns: Ok if successful
+
+`/api/pictures/org/{id}` - POST
+- Update or set the user's profile picture
+- File upload
+- Returns: Ok if successful
+
+`/api/user/create` - POST ✅
+- Does NOT have to be authenticated
 - Create a new user
 - Request body: `{realName: string, github: string}`
 
-`/api/user/enroll` - POST
+`/api/user/enroll` - POST ✅
 - Enroll a user in an organization
 - Request body: `{orgID: string}`
 
@@ -77,26 +88,31 @@ All endpoints require a valid user session cookie unless otherwise noted.
 - Get all tasks instances assigned to the current user
 - Returns: `[taskInstance]`
 
-`/api/org/create` - POST
+`/api/org/create` - POST ✅
 - Create a new organization
-- Request body: `{name: string}`
+- Request body: `{name: string, description: string}`
 
-`/api/org/{orgID}/users` - GET
+`/api/org/{orgID}/users` - GET ✅
 - Get all users in an organization
 - Returns: `{users: [user]}`
 
-`/api/org/{orgID}/tasks` - GET
+`/api/org/tasks` - GET ✅
 - Get all tasks in an organization
 - Returns: `{tasks: [task]}`
 
-`/api/tasks/create` - POST
+`/api/org/tasktypes` - GET ✅
+- Get all task types in an organization
+- Returns: `{taskTypes: [taskType]}`
+
+
+`/api/tasks/create` - POST ✅
 - Create a new task
 - orgID derived from user auth cookie
-- Request body: `{type: string, name: string, description: string, schedule: string (optional), endDate: string (optional)}`
+- Request body: `{type: string, name: string, description: string, schedule: string (optional)}`
 
 `/api/tasks/{taskID}` - GET
 - Get a task by ID
-- Returns: `{type: string, name: string, description: string, schedule: string, endDate: string}`
+- Returns: `{type: string, name: string, description: string, schedule: string}`
 
 `/api/tasks/{taskID}/instances` - GET
 - Get all instances of a task
