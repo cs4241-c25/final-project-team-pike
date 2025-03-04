@@ -6,111 +6,234 @@ body {
   color: #4A148C; /* Dark Purple */
 }
 
-/* Header Styles */
+
+/* Header */
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 15px 30px;
-  background: #a19663; /* Gold */
-  color: #77533e;
-  font-size: 24px;
-  font-weight: bold;
   position: fixed;
   top: 0;
   left: 0;
-  height: 70px;
+  width: 100%;
+  background: #4A148C; /* Dark Purple */
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 15px 30px; /* Increased left padding */
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   z-index: 1000;
 }
 
+/* Title */
 .header-title {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: bold;
+  margin-right: 20px; /* Adds spacing between title and buttons */
 }
 
+/* Navigation */
 .nav-links {
   display: flex;
-  gap: 20px;
+  gap: 10px; /* Reduces spacing between buttons */
 }
 
 .nav-links button {
   background: transparent;
   border: none;
-  font-size: 18px;
-  color: #000000;
+  color: white;
+  font-size: 16px;
   cursor: pointer;
-  transition: 0.3s ease;
+  padding: 10px 15px;
+  border-radius: 5px;
+  transition: background 0.3s ease-in-out;
 }
 
 .nav-links button:hover {
-  color: #776778; /* Purple */
-  text-decoration: underline;
+  background: rgba(255, 255, 255, 0.2);
 }
 
-/* Adjust main content to not be hidden behind the fixed header */
+
+/* Adjust main content to prevent overlap */
 .main-container {
-  margin-top: 80px;
+  margin-top: 80px; /* Push content down */
+  display: flex;
+  gap: 20px;
   padding: 20px;
 }
 
+/* Main Container */
+.main-container {
+  margin-top: 80px;
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
 
-/* Sidebar */
+/* Sidebar (Left Section) */
+.left-section {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-right: 20px;
 }
 
 .sidebar button {
-  width: 150px;
+  width: 100%;
   padding: 12px;
   border: none;
-  background: #59465c; /* Purple */
+  background: #59465c;
   color: white;
   font-size: 16px;
   cursor: pointer;
   border-radius: 8px;
-  transition: 0.3s ease;
 }
 
-.sidebar button:hover {
-  background: #9C27B0; /* Darker Purple */
+.add-chore-btn {
+  background: #FFD700;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-/* Chore List Section */
-.chores-list {
+/* Right Section (Task List) */
+.right-section {
   flex-grow: 1;
   background: white;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
 }
 
 .chore-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #F3E5F5; /* Light Purple */
+  background: #F3E5F5;
   padding: 10px;
   margin-bottom: 10px;
   border-radius: 5px;
 }
 
-/* Add Chore Button */
-.add-chore-btn {
-  background: #FFD700; /* Gold */
-  border: none;
-  padding: 12px;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: 0.3s ease;
+.status-btn {
+  padding: 8px 12px;
+  border-radius: 5px;
 }
 
-.add-chore-btn:hover {
-  background: #FFB300; /* Darker Gold */
+.status-done {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.status-not-done {
+  background-color: #FF5722;
+  color: white;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Dim background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal Box */
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Input Fields */
+.modal input,
+.modal select {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Modal Buttons */
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.save-btn {
+  background: #4CAF50;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background: #FF5722;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+/* Status Text */
+.status-text-done {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.status-text-not-done {
+  color: #FF5722;
+  font-weight: bold;
+}
+
+/* Status Buttons */
+.status-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.status-done {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.status-not-done {
+  background-color: #FF5722;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
