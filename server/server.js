@@ -17,13 +17,18 @@ const dbRun = promisify(db.run).bind(db);
 const {
     GITHUB_CLIENT_ID,
     GITHUB_CLIENT_SECRET,
-    EXPRESS_SESSION_SECRET
+    EXPRESS_SESSION_SECRET,
+    FRONTEND
 } = process.env
 
-const FRONTEND = "http://localhost:5173"
 // init express server
 const server = express()
-server.use(cors())
+const corsOptions = {
+    origin: FRONTEND,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+};
+server.use(cors(corsOptions))
 server.use(express.json())
 
 server.use(session({
@@ -65,8 +70,6 @@ server.get("/auth/github/callback",
             res.redirect(FRONTEND+"/signup")
         }
         res.redirect(FRONTEND+"/chores")
-        // TODO redirect to the dashboard page (success code 200)
-        // TODO redirect to the create profile page (success code 201)
     }
 )
 
@@ -74,7 +77,7 @@ function ensureAuth(req, res, next) {
     if (req.isAuthenticated()) {
         next()
     } else {
-        res.redirect(FRONTEND+"/")
+        res.status(401).json({error: "user not authenticated. log in pls."})
     }
 }
 
@@ -98,6 +101,11 @@ async function orgLookup(username) {
 }
 
 // ------------------------ handle GET requests ------------------------
+
+// TODO delete
+server.get("/api/woah", ensureAuth, async (request, response) => {
+    response.status(200).json({test: "hi this is the server stuff is working"})
+});
 
 // Return current user's info
 server.get("/api/user", ensureAuth, async (request, response) => {

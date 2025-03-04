@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
 import { AddCircleOutline } from '@mui/icons-material'; // Import MUI icon
 import "./Chore.css";
@@ -9,6 +9,17 @@ function App() {
     const [selectedCategory, setSelectedCategory] = useState("Cleaning");
     const [showModal, setShowModal] = useState(false);
     const [newChore, setNewChore] = useState({ name: "", deadline: "", assignee: "", category: "Cleaning", status: "Not Completed" });
+
+    // EXAMPLE API CALL: TODO DELETE ONCE DONE
+    useEffect(() => {
+        const fetchData = async () => {
+            const response = await fetch("http://localhost:3000/api/woah", {credentials: "include"})
+            const data = await response.json()
+            console.log(data)
+        }
+        fetchData()
+    }, [])
+    // END EXAMPLE API CALL
 
     const handleAddChore = () => {
         setChores(prev => ({
