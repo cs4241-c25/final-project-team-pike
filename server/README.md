@@ -61,11 +61,11 @@ All endpoints require a valid user session cookie unless otherwise noted.
 - Get the current user's information
 - Returns: `{realName: string, github: string, profilePic: string, preferences: [{type: taskTypeID, rank: int}]}`
 
-`/api/user/{id}` - GET ✅
+`/api/user/by-id/{id}` - GET ✅
 - Get a different user's information by ID
 - Returns: `{realName: string, profilePic: string}`
 
-`/api/pictures/user/{id}` - POST
+`/api/user/by-id/{id}/photo` - POST
 - Update or set the user's profile picture
 - File upload
 - Returns: Ok if successful
@@ -96,9 +96,14 @@ All endpoints require a valid user session cookie unless otherwise noted.
 - Get all users in an organization
 - Returns: `{users: [user]}`
 
-`/api/org/{orgID}/tasks` - GET ✅
+`/api/org/tasks` - GET ✅
 - Get all tasks in an organization
 - Returns: `{tasks: [task]}`
+
+`/api/org/tasktypes` - GET ✅
+- Get all task types in an organization
+- Returns: `{taskTypes: [taskType]}`
+
 
 `/api/tasks/create` - POST ✅
 - Create a new task

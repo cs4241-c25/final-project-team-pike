@@ -123,12 +123,11 @@ server.get("/api/user", ensureAuth, async (request, response) => {
 });
 
 // return another user's profile info
-server.get("/api/user/:github", ensureAuth, async (request, response) => {
+server.get("/api/user/by-id/:github", ensureAuth, async (request, response) => {
     // retrieve real name and profile pic
     const record = await dbGet("SELECT realName, profilePic FROM Users WHERE github = ?", request.params.github);
     if (!record) {
-        response.status(404).send("{error: 'User does not exist'" +
-            ", username: " + request.params.github + "}")
+        response.status(404).json({error: "User does not exist", username: request.params.github})
     }
     response.status(200).send({
         realName: record.realName,
@@ -159,14 +158,31 @@ server.get("/api/org/:orgID/users", ensureAuth, async (request, response) => {
     response.status(200).json(out);
 });
 
-server.get("/api/org/:orgID/tasks", ensureAuth, async (request, response) => {
-    const orgID = request.params.orgID
+server.get("/api/org/tasks/", ensureAuth, async (request, response) => {
+    const orgID = await orgLookup(request.user.username)
     const tasks = await dbAll("SELECT * FROM Tasks WHERE orgID = ?", orgID)
     if (!tasks) {
         response.status(404).send("{error: 'No tasks found for organization'" +
             ", orgID: " + orgID + "}")
     }
     response.status(200).json(tasks);
+});
+
+server.get("/api/org/tasktypes", ensureAuth, async (request, response) => {
+    const orgID = await orgLookup(request.user.username)
+    const types = await dbAll("SELECT * FROM TaskTypes WHERE orgID = ?", orgID)
+    if (!types) {
+        response.status(404).json({error: "No task types found for organization", orgID: orgID});
+    }
+    response.status(200).json(types);
+});
+
+server.get("/api/user/tasks", ensureAuth, async (request, response) => {
+    const myTasks = await dbAll("SELECT * FROM TaskInstances WHERE assigneeID = ?", request.user.username);
+    if (!myTasks) {
+        response.status(404).json({error: "No tasks found for user", username: request.user.username});
+    }
+    response.status(200).json(myTasks);
 });
 
 // ------------------------ handle POST requests ------------------------ 
