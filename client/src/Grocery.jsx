@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import './Grocery.css';
 
 export default function GroceryTracker() {
     const [inventory, setInventory] = useState([]);
@@ -33,86 +32,90 @@ export default function GroceryTracker() {
     };
 
     return (
-        <div className="container">
-            <h1 className="title">Grocery Tracker</h1>
+        <div className="min-h-screen bg-gray-100 text-gray-900 p-6">
+            <h1 className="text-3xl font-bold text-center mb-6">Grocery Tracker</h1>
 
             {/* Add Grocery Form */}
-            <div className="form-container">
+            <div className="bg-white shadow-md p-6 rounded-lg mb-6 max-w-lg mx-auto">
                 <input
-                    className="input"
+                    className="w-full p-2 border rounded mb-2"
                     placeholder="Item Name"
                     value={form.item}
                     onChange={(e) => setForm({ ...form, item: e.target.value })}
                 />
                 <input
-                    className="input"
+                    className="w-full p-2 border rounded mb-4"
                     placeholder="Quantity"
                     type="number"
                     value={form.quantity}
                     onChange={(e) => setForm({ ...form, quantity: e.target.value })}
                 />
-                <div className="button-group">
-                    <button className="button add-button" onClick={() => addItem("inventory")}>
+                <div className="flex space-x-2">
+                    <button className="w-1/2 px-4 py-2 bg-blue-600 text-white rounded" onClick={() => addItem("inventory")}>
                         Add to Inventory
                     </button>
-                    <button className="button add-button" onClick={() => addItem("needed")}>
+                    <button className="w-1/2 px-4 py-2 bg-green-600 text-white rounded" onClick={() => addItem("needed")}>
                         Add to Needed
                     </button>
                 </div>
             </div>
 
             {/* Grocery Needed Table */}
-            <h2>Grocery Needed</h2>
-            <table className="table">
-                <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                {needed.map((g, index) => (
-                    <tr key={index}>
-                        <td>{g.item}</td>
-                        <td>{g.quantity}</td>
-                        <td>
-                            <button className="button move-button" onClick={() => moveToInventory(index)}>
-                                Move to Inventory
-                            </button>
-                            <button className="button remove-button" onClick={() => removeItem(index, "needed")}>
-                                Remove
-                            </button>
-                        </td>
+            <div className="max-w-2xl mx-auto">
+                <h2 className="text-xl font-semibold mb-2">Grocery Needed</h2>
+                <table className="w-full bg-white shadow-md rounded-lg overflow-hidden">
+                    <thead className="bg-gray-200">
+                    <tr>
+                        <th className="p-3 text-left">Item</th>
+                        <th className="p-3 text-left">Quantity</th>
+                        <th className="p-3">Actions</th>
                     </tr>
-                ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {needed.map((g, index) => (
+                        <tr key={index} className="border-t">
+                            <td className="p-3">{g.item}</td>
+                            <td className="p-3">{g.quantity}</td>
+                            <td className="p-3 flex space-x-2">
+                                <button className="px-3 py-1 bg-blue-500 text-white rounded" onClick={() => moveToInventory(index)}>
+                                    Move to Inventory
+                                </button>
+                                <button className="px-3 py-1 bg-red-500 text-white rounded" onClick={() => removeItem(index, "needed")}>
+                                    Remove
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </div>
 
             {/* Grocery Inventory Table */}
-            <h2>Grocery Inventory</h2>
-            <table className="table">
-                <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                {inventory.map((g, index) => (
-                    <tr key={index}>
-                        <td>{g.item}</td>
-                        <td>{g.quantity}</td>
-                        <td>
-                            <button className="button remove-button" onClick={() => removeItem(index, "inventory")}>
-                                Remove
-                            </button>
-                        </td>
+            <div className="max-w-2xl mx-auto mt-6">
+                <h2 className="text-xl font-semibold mb-2">Grocery Inventory</h2>
+                <table className="w-full bg-white shadow-md rounded-lg overflow-hidden">
+                    <thead className="bg-gray-200">
+                    <tr>
+                        <th className="p-3 text-left">Item</th>
+                        <th className="p-3 text-left">Quantity</th>
+                        <th className="p-3">Actions</th>
                     </tr>
-                ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {inventory.map((g, index) => (
+                        <tr key={index} className="border-t">
+                            <td className="p-3">{g.item}</td>
+                            <td className="p-3">{g.quantity}</td>
+                            <td className="p-3">
+                                <button className="px-3 py-1 bg-red-500 text-white rounded" onClick={() => removeItem(index, "inventory")}>
+                                    Remove
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
