@@ -91,8 +91,7 @@ server.get("/login", (req, res) => {
 
 server.get("/logout", (req, res) => {
     req.logout(() => { })
-    // TODO redirect to login
-    res.redirect(FRONTEND+"/login")
+    res.redirect(FRONTEND+"/")
 })
 
 // ------------------------ db helper functions ------------------------

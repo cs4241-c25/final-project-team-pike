@@ -29,7 +29,7 @@ function App() {
             <header className="header">
                 <h1 className="header-title">Choremates</h1>
                 <nav className="nav-links">
-                    <button><Link to="/">Login</Link></button>
+                    <a href="http://localhost:3000/logout"><button>Logout</button></a>
                     <button><Link to="/chores">Chores</Link></button>
                     <button><Link to="/expense-tracker">Expenses</Link></button>
                     <button><Link to="/grocery-tracker">Groceries</Link></button>
