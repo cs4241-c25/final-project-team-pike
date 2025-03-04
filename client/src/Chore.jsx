@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from 'react-router-dom';
+import { AddCircleOutline } from '@mui/icons-material'; // Import MUI icon
 import "./Chore.css";
 
 function App() {
@@ -47,7 +48,9 @@ function App() {
                             </button>
                         ))}
                     </div>
-                    <button className="add-chore-btn" onClick={() => setShowModal(true)}>Add Chore</button>
+                    <button className="add-chore-btn" onClick={() => setShowModal(true)}>
+                        <AddCircleOutline style={{ marginRight: "5px" }} /> Add Chore
+                    </button>
                 </div>
 
                 {/* Right Section: Chores List */}
@@ -68,6 +71,7 @@ function App() {
                                     >
                                         Done
                                     </button>
+
                                     <button
                                         className="status-not-done"
                                         onClick={() => updateStatus(selectedCategory, index, "Not Completed")}
