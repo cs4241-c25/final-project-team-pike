@@ -1,8 +1,9 @@
-// src/pages/ProfileSetup.jsx
 import { useState } from "react";
-import { Button, Card, TextField, Typography, IconButton } from "@mui/material";
+import { Button, Card, TextField, Typography, IconButton, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AttachFile } from "@mui/icons-material";
+import { AccountCircle } from "@mui/icons-material"; // Import the icon
+
 
 export default function ProfileSetup() {
     const [name, setName] = useState("");
@@ -27,19 +28,25 @@ export default function ProfileSetup() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-12">
-            <Typography variant="h4" className="mb-8 font-semibold text-gray-800 text-center">Set Up Your Profile</Typography>
+        <div className="fixed inset-0 flex items-center justify-center w-full min-h-screen bg-white text-black">
+            <Card className="p-10 shadow-xl w-full max-w-3xl text-center rounded-3xl border border-gray-200 bg-white">
+                <div className="flex justify-center items-center relative w-full">
+                    <Typography variant="h5" className="font-bold !mb-8">
+                        Set Up Your Profile
+                    </Typography>
+                </div>
 
-            <Card className="p-12 shadow-xl w-full max-w-2xl text-center rounded-3xl border border-gray-200 bg-white">
-                <div className="space-y-8">
-                    <TextField
+                <Box className="space-y-6 w-full">
+                    {/* Name Input */}
+                    <TextField className={"!mb-8"}
                         label="Enter your name"
                         fullWidth
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                     />
 
-                    <div className="flex flex-col items-center justify-center border border-gray-300 p-3 rounded-lg cursor-pointer hover:bg-gray-100 w-full">
+                    {/* File Upload Section (Icon NEXT to text) */}
+                    <div className="flex items-center justify-center border border-gray-300 p-4 rounded-lg cursor-pointer hover:bg-gray-100 w-full">
                         <input
                             type="file"
                             accept="image/*"
@@ -47,27 +54,35 @@ export default function ProfileSetup() {
                             className="hidden"
                             id="file-upload"
                         />
-                        <label htmlFor="file-upload" className="flex items-center gap-2 cursor-pointer py-2">
+                        <label htmlFor="file-upload" className="flex items-center gap-2 cursor-pointer">
                             <IconButton color="primary" size="small">
                                 <AttachFile fontSize="small" />
                             </IconButton>
-                            <Typography className="text-gray-700 text-sm">Choose File</Typography>
+                            <Typography className="text-gray-700 text-base">Choose File</Typography>
                         </label>
                     </div>
 
-                    {image && <img src={image} alt="Profile Preview" className="w-32 h-32 rounded-full mx-auto border border-gray-300 shadow-md" />}
+                    {/* Profile Image Preview */}
+                    {image && (
+                        <img
+                            src={image}
+                            alt="Profile Preview"
+                            className="w-40 h-40 rounded-full mx-auto border border-gray-300 shadow-md"
+                        />
+                    )}
 
+                    {/* Done Button */}
                     <Button
                         variant="contained"
                         color="primary"
                         fullWidth
                         onClick={handleDone}
                         disabled={!name || !image}
-                        className="py-4 text-lg rounded-xl shadow-lg hover:bg-blue-700 transition-all"
+                        className="py-3 text-lg rounded-xl shadow-lg hover:bg-blue-700 transition-all"
                     >
                         Done
                     </Button>
-                </div>
+                </Box>
             </Card>
         </div>
     );

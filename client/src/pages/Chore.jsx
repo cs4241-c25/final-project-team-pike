@@ -1,30 +1,38 @@
 import { useState, useEffect } from "react";
-import { Link } from 'react-router-dom';
-import { AddCircleOutline } from '@mui/icons-material'; // Import MUI icon
-import "./Chore.css";
+import { Link } from "react-router-dom";
+import { AddCircleOutline } from "@mui/icons-material";
+import "./Chore.css"; // Keep if you have additional custom styles
 
-function App() {
+export default function ChoreApp() {
     const [chores, setChores] = useState({});
     const [categories] = useState(["Cleaning", "Kitchen", "Trash", "Others"]);
     const [selectedCategory, setSelectedCategory] = useState("Cleaning");
     const [showModal, setShowModal] = useState(false);
-    const [newChore, setNewChore] = useState({ name: "", deadline: "", assignee: "", category: "Cleaning", status: "Not Completed" });
+    const [newChore, setNewChore] = useState({
+        name: "",
+        deadline: "",
+        assignee: "",
+        category: "Cleaning",
+        status: "Not Completed",
+    });
 
-    // EXAMPLE API CALL: TODO DELETE ONCE DONE
     useEffect(() => {
         const fetchData = async () => {
-            const response = await fetch("http://localhost:3000/api/woah", {credentials: "include"})
-            const data = await response.json()
-            console.log(data)
-        }
-        fetchData()
-    }, [])
-    // END EXAMPLE API CALL
+            try {
+                const response = await fetch("http://localhost:3000/api/woah", { credentials: "include" });
+                const data = await response.json();
+                console.log(data);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+        fetchData();
+    }, []);
 
     const handleAddChore = () => {
         setChores(prev => ({
             ...prev,
-            [newChore.category]: [...(prev[newChore.category] || []), newChore]
+            [newChore.category]: [...(prev[newChore.category] || []), newChore],
         }));
         setShowModal(false);
         setNewChore({ name: "", deadline: "", assignee: "", category: "Cleaning", status: "Not Completed" });
@@ -37,98 +45,155 @@ function App() {
     };
 
     return (
-        <div className="app">
-            <header className="header">
-                <h1 className="header-title">Choremates</h1>
-                <nav className="nav-links">
-                    <a href="http://localhost:3000/logout"><button>Logout</button></a>
-                    <button><Link to="/chores">Chores</Link></button>
-                    <button><Link to="/expense-tracker">Expenses</Link></button>
-                    <button><Link to="/grocery-tracker">Groceries</Link></button>
-                </nav>
-            </header>
-
-            <div className="main-container">
-                {/* Left Section: Sidebar */}
-                <div className="left-section">
-                    <h2>Categories</h2>
-                    <div className="sidebar">
-                        {categories.map(category => (
-                            <button key={category} onClick={() => setSelectedCategory(category)}>
+        <div className="fixed inset-0 flex flex-col items-center w-full min-h-screen text-center p-6 bg-white text-black pt-[150px]">
+            {/* Main Content */}
+            <div className="flex w-full max-w-5xl gap-6">
+                {/* Sidebar */}
+                <aside className="w-1/4 p-6 border-r border-gray-300">
+                    <h2 className="text-xl font-bold mb-6">Categories</h2>
+                    <div className="space-y-3">
+                        {categories.map((category) => (
+                            <button
+                                key={category}
+                                onClick={() => setSelectedCategory(category)}
+                                className={`w-full py-3 px-5 text-left rounded-lg transition font-medium transform duration-200 ease-in-out 
+                    ${
+                                    selectedCategory === category
+                                        ? "bg-pink-500 text-white scale-105"
+                                        : "bg-gray-300 text-white hover:bg-pink-400 hover:text-white hover:scale-105"
+                                }`}
+                            >
                                 {category}
                             </button>
                         ))}
+
                     </div>
-                    <button className="add-chore-btn" onClick={() => setShowModal(true)}>
-                        <AddCircleOutline style={{ marginRight: "5px" }} /> Add Chore
+                    <button
+                        className="w-full mt-6 flex items-center justify-center gap-2 py-3 px-5 bg-pink-400 text-white rounded-lg transition hover:bg-pink-500 font-medium"
+                        onClick={() => setShowModal(true)}
+                    >
+                        <AddCircleOutline /> Add Chore
                     </button>
-                </div>
+                </aside>
 
-                {/* Right Section: Chores List */}
-                <div className="right-section">
-                    <h2>{selectedCategory} Chores</h2>
-                    <div className="chores-list">
-                        {(chores[selectedCategory] || []).map((chore, index) => (
-                            <div key={index} className="chore-item">
-                                <div>
-                                    <strong>{chore.name}</strong> - {chore.assignee} <br />
-                                    <small>Due: {chore.deadline}</small> <br />
-                                    <small>Status: <span className={chore.status === "Done" ? "status-text-done" : "status-text-not-done"}>{chore.status}</span></small>
-                                </div>
-                                <div className="status-buttons">
-                                    <button
-                                        className="status-done"
-                                        onClick={() => updateStatus(selectedCategory, index, "Done")}
-                                    >
-                                        Done
-                                    </button>
+                {/* Chores List */}
+                <section className="w-3/4 p-6">
+                    <h2 className="text-3xl font-bold mb-6">{selectedCategory} Chores</h2>
 
-                                    <button
-                                        className="status-not-done"
-                                        onClick={() => updateStatus(selectedCategory, index, "Not Completed")}
+                    {chores[selectedCategory]?.length > 0 ? (
+                        <div className="space-y-4">
+                            {chores[selectedCategory].map((chore, index) => {
+                                // ✅ Track button click state
+                                const [clicked, setClicked] = useState(false);
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className="flex justify-between items-center p-5 border rounded-lg shadow-md bg-gray-50 hover:shadow-lg transition"
                                     >
-                                        Not Completed
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                                        <div>
+                                            <p className="font-bold text-lg text-black">{chore.name}</p>
+                                            <p className="text-sm text-gray-500">Assigned to: {chore.assignee}</p>
+                                            <p className="text-sm text-gray-500">Due: {chore.deadline}</p>
+                                            <p
+                                                className={`text-sm font-bold ${
+                                                    chore.status === "Done" ? "text-green-600" : "text-red-600"
+                                                }`}
+                                            >
+                                                Status: {chore.status}
+                                            </p>
+                                        </div>
+
+                                        {/* ✅ Buttons with Dynamic Click Effect */}
+                                        <div className="flex gap-3">
+                                            <button
+                                                className={`px-4 py-2 rounded-lg transition font-medium 
+                                        ${clicked ? "bg-pink-500 text-white" : "bg-pink-400 text-white hover:bg-pink-500"}`}
+                                                onClick={() => {
+                                                    updateStatus(selectedCategory, index, "Done");
+                                                    setClicked(true);
+                                                    setTimeout(() => setClicked(false), 300); // Reset after animation
+                                                }}
+                                            >
+                                                Done
+                                            </button>
+
+                                            <button
+                                                className={`px-4 py-2 rounded-lg transition font-medium 
+                                        ${clicked ? "bg-pink-500 text-white" : "bg-gray-300 text-white hover:bg-gray-400"}`}
+                                                onClick={() => {
+                                                    updateStatus(selectedCategory, index, "Not Completed");
+                                                    setClicked(true);
+                                                    setTimeout(() => setClicked(false), 300);
+                                                }}
+                                            >
+                                                Not Completed
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-gray-500">No chores yet. Add one!</p>
+                    )}
+
+
+                </section>
             </div>
 
             {/* Modal for Adding Chores */}
             {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal" onClick={(e) => e.stopPropagation()}>
-                        <h2>Add a Chore</h2>
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                        <h2 className="text-2xl font-bold mb-4 text-pink-400">Add a Chore</h2>
+
                         <input
                             type="text"
-                            placeholder="Task Name"
+                            placeholder="Task Expense Tracker 💰"
                             value={newChore.name}
                             onChange={(e) => setNewChore({ ...newChore, name: e.target.value })}
+                            className="w-full mb-4 p-3 border rounded-lg bg-gray-100"
                         />
+
                         <input
                             type="datetime-local"
                             value={newChore.deadline}
                             onChange={(e) => setNewChore({ ...newChore, deadline: e.target.value })}
+                            className="w-full mb-4 p-3 border rounded-lg bg-gray-100"
                         />
+
                         <input
                             type="text"
                             placeholder="Assign To"
                             value={newChore.assignee}
                             onChange={(e) => setNewChore({ ...newChore, assignee: e.target.value })}
+                            className="w-full mb-4 p-3 border rounded-lg bg-gray-100"
                         />
+
                         <select
                             value={newChore.category}
                             onChange={(e) => setNewChore({ ...newChore, category: e.target.value })}
+                            className="w-full mb-4 p-3 border rounded-lg bg-gray-100"
                         >
                             {categories.map(category => (
                                 <option key={category} value={category}>{category}</option>
                             ))}
                         </select>
-                        <div className="modal-buttons">
-                            <button className="save-btn" onClick={handleAddChore}>Save</button>
-                            <button className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                className="bg-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-400 transition font-medium"
+                                onClick={() => setShowModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-pink-400 text-white px-4 py-2 rounded-lg hover:bg-pink-500 transition font-medium"
+                                onClick={handleAddChore}
+                            >
+                                Save
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -136,5 +201,3 @@ function App() {
         </div>
     );
 }
-
-export default App;

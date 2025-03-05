@@ -9,35 +9,20 @@ export default function GroceryTracker() {
     const [isNeededView, setIsNeededView] = useState(true);
 
     // ✅ Fetch groceries from backend (Runs on mount & when an item is added/removed)
-    useEffect(() => {
-        const fetchGroceries = async () => {
-            try {
-                const response = await fetch("http://localhost:3000/api/groceries", {
-                    headers: { "x-username": "exampleUser" },
-                    credentials: "include" // ✅ Ensure authentication is included if required
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log("Fetched groceries:", data); // ✅ Debugging log
-
-                if (!Array.isArray(data)) {
-                    console.error("Invalid data format received:", data);
-                    return;
-                }
-
+    const fetchGroceries = useCallback(() => {
+        fetch("/api/groceries", { headers: { "x-username": "exampleUser" } })
+            .then((response) => response.json())
+            .then((data) => {
+                console.log("Fetched groceries:", data);
                 setInventory(data.filter((item) => item.listType === "inventory"));
                 setNeeded(data.filter((item) => item.listType === "needed"));
-            } catch (error) {
-                console.error("Error fetching groceries:", error);
-            }
-        };
-
-        fetchGroceries();
+            })
+            .catch((error) => console.error("Error fetching groceries:", error));
     }, []);
+
+    useEffect(() => {
+        fetchGroceries();
+    }, [fetchGroceries]);
 
     // ✅ Add a grocery item
     const addItem = () => {
@@ -94,9 +79,7 @@ export default function GroceryTracker() {
     return (
         <div className="fixed inset-0 flex flex-col items-center w-full min-h-screen text-center p-6 bg-white text-black pt-[150px]">
             <Navbar />
-            <Typography variant="h3" className="font-bold !mb-8">
-                Grocery Tracker 🛒
-            </Typography>
+            <h2 className="text-3xl font-bold mb-6">Grocery Tracker 🛒</h2>
 
             {/* ✅ Toggle Switch */}
             <Box className="mb-6">
@@ -114,7 +97,7 @@ export default function GroceryTracker() {
 
             {/* ✅ Grocery Input Form */}
             <Box className="p-6 w-full max-w-3xl border border-gray-300 rounded-lg">
-                <Typography variant="h5" className="font-semibold mb-4">Add a Grocery Item</Typography>
+                <Typography variant="h6" className="font-semibold mb-4 justify-left">Add a Grocery Item</Typography>
                 <TextField
                     label="Item Name"
                     fullWidth

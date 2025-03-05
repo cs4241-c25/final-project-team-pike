@@ -1,28 +1,87 @@
-// src/pages/GroupSelection.jsx
 import { useNavigate } from "react-router-dom";
-import { Button, Card, Typography } from "@mui/material";
+import { Button, Card, Typography, Box } from "@mui/material";
+import Navbar from "../components/Navbar.jsx";
+import RoommateSVG from "../assets/roommate.svg";
 
 export default function GroupSelection() {
     const navigate = useNavigate();
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-            <Card className="p-6 shadow-md w-full max-w-md text-center rounded-lg">
-                <Typography variant="h5" className="mb-4">Join or Create a Roommate Group</Typography>
-                <div className="space-y-4">
+        <div
+            className="fixed inset-0 flex flex-col items-center w-full min-h-screen bg-white text-black p-6 pt-[150px]">
+            <Navbar/>
+            {/* Title: No extra spacing */}
+            <img src={RoommateSVG} alt="Roommate Illustration" className="!mb-12 w-44 h-44"/>
+
+            {/*<Typography variant="h4" className="font-bold text-center pt-150px !mb-8">*/}
+            {/*    Join or Create a Roommate Group*/}
+            {/*</Typography>*/}
+
+            {/* Card Container with Full Width & Centered */}
+           <div className="space-y-6">
+                    {/* Join Button */}
                     <Button
+                        className={"!mb-8"}
                         variant="contained"
-                        color="primary"
                         fullWidth
                         onClick={() => navigate("/join-group")}
+                        sx={{
+                            backgroundColor: "black",
+                            color: "white",
+                            borderRadius: "999px",
+                            padding: "14px 28px",
+                            fontSize: "1.25rem",
+                            fontWeight: "bold",
+                            textTransform: "none",
+                            transition: "all 0.3s ease-in-out",
+                            border: "2px solid transparent",
+                            "&:hover": {
+                                backgroundColor: "#ec4899",
+                                border: "2px solid #ec4899",
+                            },
+                            "&:active": {
+                                backgroundColor: "#ec4899",
+                                transform: "scale(0.95)",
+                            },
+                            "&:focus": {
+                                outline: "none",
+                                boxShadow: "none",
+                            },
+                        }}
                     >
                         Join a Roommate Group
                     </Button>
-                    <Button variant="outlined" color="secondary" fullWidth onClick={() => navigate("/create-group")}>
+
+                    {/* Create Button */}
+                    <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={() => navigate("/create-group")}
+                        sx={{
+                            borderColor: "#ec4899",
+                            color: "#ec4899",
+                            borderRadius: "999px",
+                            padding: "14px 28px",
+                            fontSize: "1.25rem",
+                            fontWeight: "bold",
+                            textTransform: "none",
+                            transition: "all 0.3s ease-in-out",
+                            "&:hover": {
+                                backgroundColor: "#ec4899",
+                                color: "white",
+                            },
+                            "&:active": {
+                                transform: "scale(0.95)",
+                            },
+                            "&:focus": {
+                                outline: "none",
+                                boxShadow: "none",
+                            },
+                        }}
+                    >
                         Create a Roommate Group
                     </Button>
                 </div>
-            </Card>
         </div>
     );
 }
