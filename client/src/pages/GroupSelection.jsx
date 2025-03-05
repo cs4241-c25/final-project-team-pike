@@ -10,7 +10,12 @@ export default function GroupSelection() {
             <Card className="p-6 shadow-md w-full max-w-md text-center rounded-lg">
                 <Typography variant="h5" className="mb-4">Join or Create a Roommate Group</Typography>
                 <div className="space-y-4">
-                    <Button variant="contained" color="primary" fullWidth onClick={() => navigate("/join-group")}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        onClick={() => navigate("/join-group")}
+                    >
                         Join a Roommate Group
                     </Button>
                     <Button variant="outlined" color="secondary" fullWidth onClick={() => navigate("/create-group")}>
