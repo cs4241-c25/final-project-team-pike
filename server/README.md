@@ -112,7 +112,7 @@ All endpoints require a valid user session cookie unless otherwise noted.
 - Get all instances of a task
 - Returns: `[taskInstance]`
 
-`/api/tasks/instance/{taskInstanceID}/complete` - POST
+`/api/tasks/instance/{taskInstanceID}/complete` - POST ✅
 - Mark a task as completed
 - requesting user must be the assignee or the organizer
 
@@ -122,7 +122,7 @@ All endpoints require a valid user session cookie unless otherwise noted.
 - manually create instance (most should be auto-generated from schedule)
 - Returns: `{taskID: string}` if ok
 
-`/api/tasks/instance/{taskInstanceID}/assign` - POST
+`/api/tasks/instance/{taskInstanceID}/assign` - POST ✅
 - Assign a task to a user
 - Request body: `{assigneeID: string}` (empty string to unassign)
 

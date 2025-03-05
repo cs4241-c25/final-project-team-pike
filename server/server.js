@@ -303,20 +303,27 @@ server.post("/api/tasks/create",
         response.status(200).json({message: 'task created'})
     });
 
-server.post('/api/tasks/instance/:instanceId/assign',
+server.post('/api/tasks/instance/assign',
     ensureAuth,
     body("assignee").isString().escape(),
+    body("instanceID").isNumeric(),
     async (request, response) => {
-        const instanceId = request.params.instanceId;
+
+        const instanceId = request.body.instanceID;
         const userRecord = await dbGet("SELECT * FROM Users WHERE github = ?", request.body.assignee);
         if (!userRecord) {
             response.status(400).json({error: 'User does not exist'})
             return
         }
+        const orgID = await orgLookup(request.user.username);
         const instanceRecord = await dbGet("SELECT * FROM TaskInstances WHERE id = ?", instanceId);
         if (!instanceRecord) {
             response.status(400).json({error: 'Task Instance does not exist!'})
             return
+        }
+        const taskOrg = await dbGet("SELECT orgID FROM Tasks WHERE id=?", instanceRecord.taskID);
+        if (userRecord.orgID !== orgID || taskOrg !== orgID){
+            response.status(403).json({error: "Cross-org assignment not supported"})
         }
         let prevAssignee = null
         if (instanceRecord.assigneeID) {
@@ -327,6 +334,26 @@ server.post('/api/tasks/instance/:instanceId/assign',
         response.status(200).json({message: 'task assigned', assignee: request.body.assignee, prevAssignee: prevAssignee})
     })
 
+server.post('/api/tasks/instance/complete',
+    ensureAuth,
+    body("instanceID").isNumeric(),
+    async (request, response) => {
+        const instanceRecord = await dbGet("SELECT * FROM TaskInstances WHERE id = ?", request.body.instanceID);
+        if (!instanceRecord) {
+            response.status(404).json({error: 'Task Instance does not exist'});
+            return;
+        }
+        if (instanceRecord.assigneeID !== request.user.username) {
+            response.status(403).json({error: 'Not your task'})
+            return;
+        }
+        let status = 'completed'
+        if ((new Date()) > (new Date(instanceRecord.dueDate))){
+            status += ' (late)'
+        }
+        await dbRun("UPDATE TaskInstances SET status=? WHERE id=?", status, request.body.instanceID)
+        response.status(200)
+    })
 // ------------------------ start server ------------------------ 
 async function startServer() {
     server.listen(process.env.PORT || port, () => {
