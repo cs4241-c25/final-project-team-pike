@@ -299,9 +299,33 @@ server.post("/api/tasks/create",
             response.status(500).json({error: e})
             return
         }
+        // todo: if schedule is set, populate downstream instances
         response.status(200).json({message: 'task created'})
     });
 
+server.post('/api/tasks/instance/:instanceId/assign',
+    ensureAuth,
+    body("assignee").isString().escape(),
+    async (request, response) => {
+        const instanceId = request.params.instanceId;
+        const userRecord = await dbGet("SELECT * FROM Users WHERE github = ?", request.body.assignee);
+        if (!userRecord) {
+            response.status(400).json({error: 'User does not exist'})
+            return
+        }
+        const instanceRecord = await dbGet("SELECT * FROM TaskInstances WHERE id = ?", instanceId);
+        if (!instanceRecord) {
+            response.status(400).json({error: 'Task Instance does not exist!'})
+            return
+        }
+        let prevAssignee = null
+        if (instanceRecord.assigneeID) {
+            console.log("Warning: overwriting assignee for taskInstance "+ instanceId)
+            prevAssignee = instanceRecord.assigneeID
+        }
+        await dbRun("UPDATE TaskInstances SET assigneeID = ? WHERE id = ?", request.body.assignee, instanceId)
+        response.status(200).json({message: 'task assigned', assignee: request.body.assignee, prevAssignee: prevAssignee})
+    })
 
 // ------------------------ start server ------------------------ 
 async function startServer() {
