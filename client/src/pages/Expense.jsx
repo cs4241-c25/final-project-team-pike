@@ -1,27 +1,43 @@
-// src/pages/ExpenseTracker.jsx
 import { useState } from "react";
 import Navbar from "../components/Navbar";
-import { Card, Button, Typography, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Select, MenuItem, Table, TableHead, TableBody, TableRow, TableCell } from "@mui/material";
+import {
+    Button,
+    Typography,
+    TextField,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Select,
+    MenuItem,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableCell,
+    InputAdornment,
+} from "@mui/material";
 
 export default function Expense() {
     const [expenses, setExpenses] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [form, setForm] = useState({ description: '', category: '', amount: '', payer: '' });
-    const [newCategory, setNewCategory] = useState('');
-    const [editIndex, setEditIndex] = useState(null);
+    const [form, setForm] = useState({
+        description: "",
+        category: "",
+        amount: "",
+        payer: "",
+    });
     const [showRemovePrompt, setShowRemovePrompt] = useState(false);
     const [removeIndex, setRemoveIndex] = useState(null);
 
+    // Extract unique payers from existing expenses
+    const payers = [...new Set(expenses.map((expense) => expense.payer))];
+
     const addExpense = () => {
-        if (editIndex !== null) {
-            const updatedExpenses = [...expenses];
-            updatedExpenses[editIndex] = { ...form, amount: parseFloat(form.amount) };
-            setExpenses(updatedExpenses);
-            setEditIndex(null);
-        } else {
+        if (form.description && form.category && form.amount && form.payer) {
             setExpenses([...expenses, { ...form, amount: parseFloat(form.amount) }]);
+            setForm({ description: "", category: "", amount: "", payer: "" });
         }
-        setForm({ description: '', category: '', amount: '', payer: '' });
     };
 
     const removeExpense = () => {
@@ -30,65 +46,111 @@ export default function Expense() {
         setRemoveIndex(null);
     };
 
-    const addCategory = () => {
-        if (newCategory && !categories.includes(newCategory)) {
-            setCategories([...categories, newCategory]);
-            setNewCategory('');
-        }
-    };
-
     return (
-        <div className="bg-gray-100 min-h-screen pt-20 p-6">
-            <Navbar />
-            <div className="flex flex-col items-center gap-6">
-                <Card className="w-full max-w-lg p-6 shadow-md">
-                    <Typography variant="h6" className="mb-4">Add Expense</Typography>
-                    <TextField label="Description" fullWidth className="mb-3" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-                    <div className="flex gap-3 mb-3">
-                        <TextField label="New Category" className="flex-1" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} />
-                        <Button variant="contained" color="primary" onClick={addCategory}>Add</Button>
-                    </div>
-                    <Select fullWidth className="mb-3" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                        <MenuItem value="">Select Category</MenuItem>
+        <div
+            className="fixed inset-0 flex flex-col items-center w-full min-h-screen text-center p-6 bg-white text-black pt-[150px]">
+            <Navbar/>
+            <Typography variant="h3" className="font-bold !mb-8">
+                Expense Tracker 💰
+            </Typography>
+
+            {/* Add Expense Form */}
+            <div className="p-6 w-full max-w-3xl border border-gray-300 rounded-lg">
+                <Typography variant="h5" className="!mb-4 font-semibold">Add an Expense</Typography>
+                <div className="flex flex-col gap-3">
+                    <TextField
+                        label="Description"
+                        fullWidth
+                        value={form.description}
+                        onChange={(e) => setForm({...form, description: e.target.value})}
+                    />
+                    <Select
+                        fullWidth
+                        value={form.category}
+                        onChange={(e) => setForm({...form, category: e.target.value})}
+                        displayEmpty
+                        sx={{textAlign: "left"}} // Left-aligns placeholder
+                    >
+                        <MenuItem value="" disabled>Category</MenuItem>
                         {categories.map((category, index) => (
                             <MenuItem key={index} value={category}>{category}</MenuItem>
                         ))}
                     </Select>
-                    <TextField label="Amount" type="number" fullWidth className="mb-3" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-                    <TextField label="Payer" fullWidth className="mb-3" value={form.payer} onChange={(e) => setForm({ ...form, payer: e.target.value })} />
-                    <Button variant="contained" color="success" fullWidth onClick={addExpense}>{editIndex !== null ? "Save Expense" : "Add Expense"}</Button>
-                </Card>
 
-                <Card className="w-full max-w-3xl p-6 shadow-md">
-                    <Typography variant="h6" className="mb-4">Expenses</Typography>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Description</TableCell>
-                                <TableCell>Category</TableCell>
-                                <TableCell>Amount</TableCell>
-                                <TableCell>Payer</TableCell>
-                                <TableCell>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {expenses.map((expense, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{expense.description}</TableCell>
-                                    <TableCell>{expense.category}</TableCell>
-                                    <TableCell>${expense.amount.toFixed(2)}</TableCell>
-                                    <TableCell>{expense.payer}</TableCell>
-                                    <TableCell>
-                                        <Button variant="outlined" color="warning" onClick={() => setForm(expense)}>Edit</Button>
-                                        <Button variant="outlined" color="error" className="ml-2" onClick={() => { setRemoveIndex(index); setShowRemovePrompt(true); }}>Remove</Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </Card>
+                    {/* Amount Field with Dollar Sign Prefix */}
+                    <TextField
+                        label="Amount"
+                        type="number"
+                        fullWidth
+                        value={form.amount}
+                        onChange={(e) => setForm({...form, amount: e.target.value})}
+                        InputProps={{
+                            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                        }}
+                    />
+
+                    <Select
+                        fullWidth
+                        value={form.payer}
+                        onChange={(e) => setForm({...form, payer: e.target.value})}
+                        displayEmpty
+                        sx={{textAlign: "left"}} // Left-aligns placeholder
+                    >
+                        <MenuItem value="" disabled>Payer</MenuItem>
+                        {payers.map((payer, index) => (
+                            <MenuItem key={index} value={payer}>{payer}</MenuItem>
+                        ))}
+                    </Select>
+                    <Button variant="contained" color="success" fullWidth onClick={addExpense}>
+                        Add Expense
+                    </Button>
+                </div>
             </div>
 
+            {/* Expense Table */}
+            <div className="p-6 mt-6 w-full max-w-3xl border border-gray-300 rounded-lg">
+                <Typography variant="h5" className="!mb-4 font-semibold">Expenses</Typography>
+                <Table className="!mb-5">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Description</TableCell>
+                            <TableCell>Category</TableCell>
+                            <TableCell>Amount</TableCell>
+                            <TableCell>Payer</TableCell>
+                            <TableCell>Actions</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {expenses.map((expense, index) => (
+                            <TableRow key={index}>
+                                <TableCell>{expense.description}</TableCell>
+                                <TableCell>{expense.category}</TableCell>
+                                <TableCell>${expense.amount.toFixed(2)}</TableCell>
+                                <TableCell>{expense.payer}</TableCell>
+                                <TableCell>
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        onClick={() => {
+                                            setRemoveIndex(index);
+                                            setShowRemovePrompt(true);
+                                        }}
+                                    >
+                                        Remove
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                {expenses.length === 0 && (
+                    <Typography variant="body1" className="text-gray-500 mt-4">
+                        No expenses yet. Add some!
+                    </Typography>
+                )}
+            </div>
+
+            {/* Confirm Deletion Dialog */}
             <Dialog open={showRemovePrompt} onClose={() => setShowRemovePrompt(false)}>
                 <DialogTitle>Confirm Deletion</DialogTitle>
                 <DialogContent>

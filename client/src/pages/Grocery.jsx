@@ -1,118 +1,164 @@
-import { useState } from 'react';
-import './Grocery.css';
+import { useState, useEffect, useCallback } from "react";
+import { Typography, Button, TextField, Switch, FormControlLabel, Box } from "@mui/material";
+import Navbar from "../components/Navbar";
 
 export default function GroceryTracker() {
     const [inventory, setInventory] = useState([]);
     const [needed, setNeeded] = useState([]);
-    const [form, setForm] = useState({ item: '', quantity: '' });
+    const [form, setForm] = useState({ item: "", quantity: "" });
+    const [isNeededView, setIsNeededView] = useState(true);
 
-    const addItem = (listType) => {
-        if (form.item && form.quantity) {
-            const newItem = { item: form.item, quantity: parseInt(form.quantity) };
-            if (listType === "inventory") {
-                setInventory([...inventory, newItem]);
-            } else {
-                setNeeded([...needed, newItem]);
-            }
-            setForm({ item: '', quantity: '' });
-        }
+    // ✅ Fetch groceries from backend (Runs on mount & when an item is added/removed)
+    const fetchGroceries = useCallback(() => {
+        fetch("/api/groceries", { headers: { "x-username": "exampleUser" } })
+            .then((response) => response.json())
+            .then((data) => {
+                console.log("Fetched groceries:", data);
+                setInventory(data.filter((item) => item.listType === "inventory"));
+                setNeeded(data.filter((item) => item.listType === "needed"));
+            })
+            .catch((error) => console.error("Error fetching groceries:", error));
+    }, []);
+
+    useEffect(() => {
+        fetchGroceries();
+    }, [fetchGroceries]);
+
+    // ✅ Add a grocery item
+    const addItem = () => {
+        if (!form.item || !form.quantity) return;
+
+        const newItem = {
+            name: form.item,
+            description: "",
+            quantity: parseInt(form.quantity),
+            location: "",
+            notes: "",
+            listType: isNeededView ? "needed" : "inventory",
+        };
+
+        fetch("/api/groceries", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-username": "exampleUser" },
+            body: JSON.stringify(newItem),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                console.log("Added item:", data);
+                fetchGroceries(); // ✅ Refresh list after adding an item
+                setForm({ item: "", quantity: "" }); // Reset form
+            })
+            .catch((error) => console.error("Error adding item:", error));
     };
 
-    const moveToInventory = (index) => {
-        const item = needed[index];
-        setNeeded(needed.filter((_, i) => i !== index));
-        setInventory([...inventory, item]);
+    // ✅ Move an item from "Needed" to "Inventory"
+    const moveToInventory = (id) => {
+        fetch(`/api/groceries/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "x-username": "exampleUser" },
+            body: JSON.stringify({ listType: "inventory" }),
+        })
+            .then((response) => response.json())
+            .then((updatedItem) => {
+                console.log("Moved item to inventory:", updatedItem);
+                fetchGroceries(); // ✅ Refresh list after moving an item
+            })
+            .catch((error) => console.error("Error moving item:", error));
     };
 
-    const removeItem = (index, listType) => {
-        if (listType === "inventory") {
-            setInventory(inventory.filter((_, i) => i !== index));
-        } else {
-            setNeeded(needed.filter((_, i) => i !== index));
-        }
+    // ✅ Delete a grocery item
+    const removeItem = (id) => {
+        fetch(`/api/groceries/${id}`, { method: "DELETE", headers: { "x-username": "exampleUser" } })
+            .then(() => {
+                console.log("Deleted item ID:", id);
+                fetchGroceries(); // ✅ Refresh list after deletion
+            })
+            .catch((error) => console.error("Error deleting item:", error));
     };
 
     return (
-        <div className="container">
-            <h1 className="title">Grocery Tracker</h1>
+        <div className="fixed inset-0 flex flex-col items-center w-full min-h-screen text-center p-6 bg-white text-black pt-[150px]">
+            <Navbar />
+            <Typography variant="h3" className="font-bold !mb-8">
+                Grocery Tracker 🛒
+            </Typography>
 
-            {/* Add Grocery Form */}
-            <div className="form-container">
-                <input
-                    className="input"
-                    placeholder="Item Name"
+            {/* ✅ Toggle Switch */}
+            <Box className="mb-6">
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={isNeededView}
+                            onChange={() => setIsNeededView(!isNeededView)}
+                            color="primary"
+                        />
+                    }
+                    label={isNeededView ? "Viewing Needed Items" : "Viewing Inventory"}
+                />
+            </Box>
+
+            {/* ✅ Grocery Input Form */}
+            <Box className="p-6 w-full max-w-3xl border border-gray-300 rounded-lg">
+                <Typography variant="h5" className="font-semibold mb-4">Add a Grocery Item</Typography>
+                <TextField
+                    label="Item Name"
+                    fullWidth
                     value={form.item}
                     onChange={(e) => setForm({ ...form, item: e.target.value })}
+                    className="mb-4"
                 />
-                <input
-                    className="input"
-                    placeholder="Quantity"
+                <TextField
+                    label="Quantity"
+                    fullWidth
                     type="number"
                     value={form.quantity}
                     onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                    className="mb-4"
                 />
-                <div className="button-group">
-                    <button className="button add-button" onClick={() => addItem("inventory")}>
-                        Add to Inventory
-                    </button>
-                    <button className="button add-button" onClick={() => addItem("needed")}>
-                        Add to Needed
-                    </button>
-                </div>
-            </div>
+                <Button
+                    variant="contained"
+                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg w-full transition"
+                    onClick={addItem}
+                >
+                    {isNeededView ? "Add to Needed" : "Add to Inventory"}
+                </Button>
+            </Box>
 
-            {/* Grocery Needed Table */}
-            <h2>Grocery Needed</h2>
-            <table className="table">
-                <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                {needed.map((g, index) => (
-                    <tr key={index}>
-                        <td>{g.item}</td>
-                        <td>{g.quantity}</td>
-                        <td>
-                            <button className="button move-button" onClick={() => moveToInventory(index)}>
-                                Move to Inventory
-                            </button>
-                            <button className="button remove-button" onClick={() => removeItem(index, "needed")}>
-                                Remove
-                            </button>
-                        </td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-
-            {/* Grocery Inventory Table */}
-            <h2>Grocery Inventory</h2>
-            <table className="table">
-                <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                {inventory.map((g, index) => (
-                    <tr key={index}>
-                        <td>{g.item}</td>
-                        <td>{g.quantity}</td>
-                        <td>
-                            <button className="button remove-button" onClick={() => removeItem(index, "inventory")}>
-                                Remove
-                            </button>
-                        </td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
+            {/* ✅ Grocery List */}
+            <Box className="p-6 mt-6 w-full max-w-3xl border border-gray-300 rounded-lg">
+                <Typography variant="h5" className="font-semibold mb-4">
+                    {isNeededView ? "Grocery Needed" : "Grocery Inventory"}
+                </Typography>
+                {(isNeededView ? needed : inventory).length === 0 ? (
+                    <Typography variant="body1" className="text-gray-500">No items yet. Add some!</Typography>
+                ) : (
+                    (isNeededView ? needed : inventory).map((item) => (
+                        <Box key={item.id} className="flex justify-between items-center p-2 border-b">
+                            <Typography variant="body1">{item.name} - {item.quantity}</Typography>
+                            <Box className="flex space-x-2">
+                                {/* ✅ Move button (only for "Needed") */}
+                                {isNeededView && (
+                                    <Button
+                                        variant="contained"
+                                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition"
+                                        onClick={() => moveToInventory(item.id)}
+                                    >
+                                        Move to Inventory
+                                    </Button>
+                                )}
+                                {/* ✅ Delete button */}
+                                <Button
+                                    variant="contained"
+                                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition"
+                                    onClick={() => removeItem(item.id)}
+                                >
+                                    Delete
+                                </Button>
+                            </Box>
+                        </Box>
+                    ))
+                )}
+            </Box>
         </div>
     );
 }
