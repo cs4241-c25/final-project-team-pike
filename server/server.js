@@ -294,23 +294,43 @@ server.post("/api/tasks/create",
         response.status(200).json({message: 'task created'})
     });
 
-// ------------------------ GROCERY API ENDPOINTS ------------------------
+// ✅ CORS Setup (Fixes Access-Control-Allow-Origin error)
+server.use(cors({
+    origin: FRONTEND_URL,
+    credentials: true, // ✅ Allow credentials
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-username"]
+}));
 
-// ✅ Helper function: Get user organization
+server.use(express.json());
+
+// ✅ Session Configuration (Required for authentication)
+server.use(session({
+    secret: "super-secret-key", // Change this for production
+    resave: false,
+    saveUninitialized: false
+}));
+
+// ------------------------ Helper Functions ------------------------
+// ✅ Get user organization based on username
 async function orgLookup(username) {
     return await dbGet("SELECT orgID FROM Users WHERE github = ?", username);
 }
 
-// ✅ Get all groceries (Filtered by Organization)
+// ------------------------ Grocery API Routes ------------------------
+
+// ✅ Fetch all groceries (filtered by organization)
 server.get("/api/groceries", async (req, res) => {
     try {
+        console.log("GET /api/groceries called");
+
         const userOrg = await orgLookup(req.headers["x-username"]);
         if (!userOrg) {
             return res.status(400).json({ error: "User is not in an organization" });
         }
 
         const groceries = await dbAll("SELECT * FROM Inventory WHERE orgID = ?", userOrg.orgID);
-        console.log("Fetched groceries:", groceries); // ✅ Debugging log
+        console.log("Fetched groceries:", groceries);
 
         res.status(200).json(groceries);
     } catch (error) {
@@ -322,7 +342,7 @@ server.get("/api/groceries", async (req, res) => {
 // ✅ Add a new grocery item
 server.post("/api/groceries", async (req, res) => {
     const { name, description, quantity, location, notes, listType } = req.body;
-    console.log("Received POST request:", req.body); // ✅ Debugging log
+    console.log("Received POST request:", req.body);
 
     try {
         const userOrg = await orgLookup(req.headers["x-username"]);
@@ -330,7 +350,6 @@ server.post("/api/groceries", async (req, res) => {
             return res.status(400).json({ error: "User is not in an organization" });
         }
 
-        // Validate listType
         if (!["inventory", "needed"].includes(listType)) {
             return res.status(400).json({ error: "Invalid listType. Must be 'inventory' or 'needed'." });
         }
@@ -341,7 +360,7 @@ server.post("/api/groceries", async (req, res) => {
         );
 
         const newItem = await dbGet("SELECT * FROM Inventory ORDER BY id DESC LIMIT 1");
-        console.log("New item added:", newItem); // ✅ Debugging log
+        console.log("New item added:", newItem);
 
         res.status(201).json(newItem);
     } catch (error) {
@@ -361,13 +380,11 @@ server.put("/api/groceries/:id", async (req, res) => {
             return res.status(400).json({ error: "User is not in an organization" });
         }
 
-        // Ensure item belongs to the user's organization
         const item = await dbGet("SELECT * FROM Inventory WHERE id = ? AND orgID = ?", itemId, userOrg.orgID);
         if (!item) {
             return res.status(404).json({ error: "Item not found or not in your organization" });
         }
 
-        // Validate listType
         if (!["inventory", "needed"].includes(listType)) {
             return res.status(400).json({ error: "Invalid listType. Must be 'inventory' or 'needed'." });
         }
@@ -375,7 +392,7 @@ server.put("/api/groceries/:id", async (req, res) => {
         await dbRun("UPDATE Inventory SET listType = ? WHERE id = ?", listType, itemId);
 
         const updatedItem = await dbGet("SELECT * FROM Inventory WHERE id = ?", itemId);
-        console.log("Item moved:", updatedItem); // ✅ Debugging log
+        console.log("Item moved:", updatedItem);
 
         res.status(200).json(updatedItem);
     } catch (error) {
@@ -394,14 +411,13 @@ server.delete("/api/groceries/:id", async (req, res) => {
             return res.status(400).json({ error: "User is not in an organization" });
         }
 
-        // Ensure item belongs to the user's organization
         const item = await dbGet("SELECT * FROM Inventory WHERE id = ? AND orgID = ?", itemId, userOrg.orgID);
         if (!item) {
             return res.status(404).json({ error: "Item not found or not in your organization" });
         }
 
         await dbRun("DELETE FROM Inventory WHERE id = ?", itemId);
-        console.log("Deleted item ID:", itemId); // ✅ Debugging log
+        console.log("Deleted item ID:", itemId);
 
         res.status(200).json({ message: "Item deleted successfully" });
     } catch (error) {
@@ -409,7 +425,6 @@ server.delete("/api/groceries/:id", async (req, res) => {
         res.status(500).json({ error: "Failed to delete item", details: error.message });
     }
 });
-
 
 // ------------------------ start server ------------------------ 
 async function startServer() {

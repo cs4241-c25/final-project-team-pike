@@ -9,20 +9,35 @@ export default function GroceryTracker() {
     const [isNeededView, setIsNeededView] = useState(true);
 
     // ✅ Fetch groceries from backend (Runs on mount & when an item is added/removed)
-    const fetchGroceries = useCallback(() => {
-        fetch("/api/groceries", { headers: { "x-username": "exampleUser" } })
-            .then((response) => response.json())
-            .then((data) => {
-                console.log("Fetched groceries:", data);
+    useEffect(() => {
+        const fetchGroceries = async () => {
+            try {
+                const response = await fetch("http://localhost:3000/api/groceries", {
+                    headers: { "x-username": "exampleUser" },
+                    credentials: "include" // ✅ Ensure authentication is included if required
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log("Fetched groceries:", data); // ✅ Debugging log
+
+                if (!Array.isArray(data)) {
+                    console.error("Invalid data format received:", data);
+                    return;
+                }
+
                 setInventory(data.filter((item) => item.listType === "inventory"));
                 setNeeded(data.filter((item) => item.listType === "needed"));
-            })
-            .catch((error) => console.error("Error fetching groceries:", error));
-    }, []);
+            } catch (error) {
+                console.error("Error fetching groceries:", error);
+            }
+        };
 
-    useEffect(() => {
         fetchGroceries();
-    }, [fetchGroceries]);
+    }, []);
 
     // ✅ Add a grocery item
     const addItem = () => {
