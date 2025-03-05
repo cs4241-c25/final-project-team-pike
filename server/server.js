@@ -302,23 +302,6 @@ server.post("/api/tasks/create",
         response.status(200).json({message: 'task created'})
     });
 
-// ✅ CORS Setup (Fixes Access-Control-Allow-Origin error)
-server.use(cors({
-    origin: FRONTEND_URL,
-    credentials: true, // ✅ Allow credentials
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-username"]
-}));
-
-server.use(express.json());
-
-// ✅ Session Configuration (Required for authentication)
-server.use(session({
-    secret: "super-secret-key", // Change this for production
-    resave: false,
-    saveUninitialized: false
-}));
-
 // ------------------------ Helper Functions ------------------------
 // ✅ Get user organization based on username
 async function orgLookup(username) {
