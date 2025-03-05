@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { AddCircleOutline } from "@mui/icons-material";
-import "./Chore.css"; // Keep if you have additional custom styles
 
 export default function ChoreApp() {
     const [chores, setChores] = useState({});

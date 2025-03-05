@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button, Card, TextField, Typography, IconButton, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AttachFile } from "@mui/icons-material";
-import { AccountCircle } from "@mui/icons-material"; // Import the icon
+import { AccountCircle } from "@mui/icons-material";
+import Navbar from "../components/Navbar.jsx"; // Import the icon
 
 
 export default function ProfileSetup() {
@@ -28,7 +29,8 @@ export default function ProfileSetup() {
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center w-full min-h-screen bg-white text-black">
+        <div className="fixed inset-0 flex items-center justify-center w-full min-h-screen bg-white text-black pt-150px">
+            <Navbar/>
             <Card className="p-10 shadow-xl w-full max-w-3xl text-center rounded-3xl border border-gray-200 bg-white">
                 <div className="flex justify-center items-center relative w-full">
                     <Typography variant="h5" className="font-bold !mb-8">
