@@ -1,15 +1,25 @@
-// src/pages/Chore.jsx
-import { useState } from "react";
-import { AddCircleOutline } from "@mui/icons-material";
-import { Button, Card, CardContent, Typography, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Select, MenuItem } from "@mui/material";
-import Navbar from "../components/Navbar";
+import { useState, useEffect } from "react";
+import { Link } from 'react-router-dom';
+import { AddCircleOutline } from '@mui/icons-material'; // Import MUI icon
+import "./Chore.css";
 
-export default function Chore() {
+function App() {
     const [chores, setChores] = useState({});
     const [categories] = useState(["Cleaning", "Kitchen", "Trash", "Others"]);
     const [selectedCategory, setSelectedCategory] = useState("Cleaning");
     const [showModal, setShowModal] = useState(false);
     const [newChore, setNewChore] = useState({ name: "", deadline: "", assignee: "", category: "Cleaning", status: "Not Completed" });
+
+    // EXAMPLE API CALL: TODO DELETE ONCE DONE
+    useEffect(() => {
+        const fetchData = async () => {
+            const response = await fetch("http://localhost:3000/api/woah", {credentials: "include"})
+            const data = await response.json()
+            console.log(data)
+        }
+        fetchData()
+    }, [])
+    // END EXAMPLE API CALL
 
     const handleAddChore = () => {
         setChores(prev => ({
@@ -20,51 +30,111 @@ export default function Chore() {
         setNewChore({ name: "", deadline: "", assignee: "", category: "Cleaning", status: "Not Completed" });
     };
 
+    const updateStatus = (category, index, status) => {
+        const updatedChores = { ...chores };
+        updatedChores[category][index].status = status;
+        setChores(updatedChores);
+    };
+
     return (
-        <div className="bg-gray-100 min-h-screen pt-20 p-6">
-            <Navbar />
-            <div className="flex gap-6">
-                <Card className="w-1/4 p-4 shadow-md">
-                    <Typography variant="h6">Categories</Typography>
-                    {categories.map(category => (
-                        <Button key={category} fullWidth variant={selectedCategory === category ? "contained" : "outlined"} className="my-2" onClick={() => setSelectedCategory(category)}>
-                            {category}
-                        </Button>
-                    ))}
-                    <Button className="mt-4" variant="contained" color="secondary" startIcon={<AddCircleOutline />} onClick={() => setShowModal(true)}>
-                        Add Chore
-                    </Button>
-                </Card>
-                <Card className="flex-grow p-4 shadow-md">
-                    <Typography variant="h6" className="mb-3">{selectedCategory} Chores</Typography>
-                    {chores[selectedCategory]?.map((chore, index) => (
-                        <Card key={index} className="mb-2 flex justify-between items-center p-4 bg-gray-50 shadow-sm">
-                            <div>
-                                <Typography variant="subtitle1" className="font-semibold">{chore.name}</Typography>
-                                <Typography variant="body2" className="text-gray-500">{chore.assignee} - Due: {chore.deadline}</Typography>
-                            </div>
-                            <Button variant="outlined" color={chore.status === "Done" ? "success" : "error"}>{chore.status}</Button>
-                        </Card>
-                    ))}
-                </Card>
-            </div>
-            <Dialog open={showModal} onClose={() => setShowModal(false)}>
-                <DialogTitle>Add a Chore</DialogTitle>
-                <DialogContent className="flex flex-col gap-3">
-                    <TextField label="Task Name" value={newChore.name} onChange={(e) => setNewChore({ ...newChore, name: e.target.value })} fullWidth />
-                    <TextField label="Deadline" type="datetime-local" value={newChore.deadline} onChange={(e) => setNewChore({ ...newChore, deadline: e.target.value })} fullWidth />
-                    <TextField label="Assign To" value={newChore.assignee} onChange={(e) => setNewChore({ ...newChore, assignee: e.target.value })} fullWidth />
-                    <Select value={newChore.category} onChange={(e) => setNewChore({ ...newChore, category: e.target.value })} fullWidth>
+        <div className="app">
+            <header className="header">
+                <h1 className="header-title">Choremates</h1>
+                <nav className="nav-links">
+                    <a href="http://localhost:3000/logout"><button>Logout</button></a>
+                    <button><Link to="/chores">Chores</Link></button>
+                    <button><Link to="/expense-tracker">Expenses</Link></button>
+                    <button><Link to="/grocery-tracker">Groceries</Link></button>
+                </nav>
+            </header>
+
+            <div className="main-container">
+                {/* Left Section: Sidebar */}
+                <div className="left-section">
+                    <h2>Categories</h2>
+                    <div className="sidebar">
                         {categories.map(category => (
-                            <MenuItem key={category} value={category}>{category}</MenuItem>
+                            <button key={category} onClick={() => setSelectedCategory(category)}>
+                                {category}
+                            </button>
                         ))}
-                    </Select>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setShowModal(false)} color="error">Cancel</Button>
-                    <Button onClick={handleAddChore} variant="contained" color="primary">Save</Button>
-                </DialogActions>
-            </Dialog>
+                    </div>
+                    <button className="add-chore-btn" onClick={() => setShowModal(true)}>
+                        <AddCircleOutline style={{ marginRight: "5px" }} /> Add Chore
+                    </button>
+                </div>
+
+                {/* Right Section: Chores List */}
+                <div className="right-section">
+                    <h2>{selectedCategory} Chores</h2>
+                    <div className="chores-list">
+                        {(chores[selectedCategory] || []).map((chore, index) => (
+                            <div key={index} className="chore-item">
+                                <div>
+                                    <strong>{chore.name}</strong> - {chore.assignee} <br />
+                                    <small>Due: {chore.deadline}</small> <br />
+                                    <small>Status: <span className={chore.status === "Done" ? "status-text-done" : "status-text-not-done"}>{chore.status}</span></small>
+                                </div>
+                                <div className="status-buttons">
+                                    <button
+                                        className="status-done"
+                                        onClick={() => updateStatus(selectedCategory, index, "Done")}
+                                    >
+                                        Done
+                                    </button>
+
+                                    <button
+                                        className="status-not-done"
+                                        onClick={() => updateStatus(selectedCategory, index, "Not Completed")}
+                                    >
+                                        Not Completed
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Modal for Adding Chores */}
+            {showModal && (
+                <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <h2>Add a Chore</h2>
+                        <input
+                            type="text"
+                            placeholder="Task Name"
+                            value={newChore.name}
+                            onChange={(e) => setNewChore({ ...newChore, name: e.target.value })}
+                        />
+                        <input
+                            type="datetime-local"
+                            value={newChore.deadline}
+                            onChange={(e) => setNewChore({ ...newChore, deadline: e.target.value })}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Assign To"
+                            value={newChore.assignee}
+                            onChange={(e) => setNewChore({ ...newChore, assignee: e.target.value })}
+                        />
+                        <select
+                            value={newChore.category}
+                            onChange={(e) => setNewChore({ ...newChore, category: e.target.value })}
+                        >
+                            {categories.map(category => (
+                                <option key={category} value={category}>{category}</option>
+                            ))}
+                        </select>
+                        <div className="modal-buttons">
+                            <button className="save-btn" onClick={handleAddChore}>Save</button>
+                            <button className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+
+export default App;
