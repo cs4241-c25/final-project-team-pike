@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Button, Card, Typography, Box } from "@mui/material";
+import { Button } from "@mui/material";
 import Navbar from "../components/Navbar.jsx";
 import RoommateSVG from "../assets/roommate.svg";
 
@@ -7,8 +7,7 @@ export default function GroupSelection() {
     const navigate = useNavigate();
 
     return (
-        <div
-            className="fixed inset-0 flex flex-col items-center w-full min-h-screen bg-white text-black p-6 pt-[150px]">
+        <div className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
             <Navbar/>
             {/* Title: No extra spacing */}
             <img src={RoommateSVG} alt="Roommate Illustration" className="!mb-12 w-44 h-44"/>

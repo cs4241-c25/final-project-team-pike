@@ -47,10 +47,9 @@ export default function Expense() {
     };
 
     return (
-        <div
-            className="fixed inset-0 flex flex-col items-center w-full min-h-screen text-center p-6 bg-white text-black pt-[150px]">
+        <div className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
             <Navbar/>
-            <h2 className="text-3xl font-bold mb-6">Expense Tracker 💰</h2>
+            <h1 className="text-3xl font-bold !mb-20 pt-[150px]">Expense Tracker 💰</h1>
 
             {/* Add Expense Form */}
             <div className="p-6 w-full max-w-3xl border border-gray-300 rounded-lg">

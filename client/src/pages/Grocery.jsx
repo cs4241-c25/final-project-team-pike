@@ -77,9 +77,9 @@ export default function GroceryTracker() {
     };
 
     return (
-        <div className="fixed inset-0 flex flex-col items-center w-full min-h-screen text-center p-6 bg-white text-black pt-[150px]">
-            <Navbar />
-            <h2 className="text-3xl font-bold mb-6">Grocery Tracker 🛒</h2>
+        <div className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
+            <Navbar/>
+            <h1 className="text-3xl font-bold !mb-20 pt-[150px]">Grocery Tracker 🛒</h1>
 
             {/* ✅ Toggle Switch */}
             <Box className="mb-6">
@@ -97,21 +97,21 @@ export default function GroceryTracker() {
 
             {/* ✅ Grocery Input Form */}
             <Box className="p-6 w-full max-w-3xl border border-gray-300 rounded-lg">
-                <Typography variant="h6" className="font-semibold mb-4 justify-left">Add a Grocery Item</Typography>
+                <Typography variant="h6" className="font-semibold !mb-7 justify-left">Add a Grocery Item</Typography>
                 <TextField
                     label="Item Name"
                     fullWidth
                     value={form.item}
-                    onChange={(e) => setForm({ ...form, item: e.target.value })}
-                    className="mb-4"
+                    onChange={(e) => setForm({...form, item: e.target.value})}
+                    className="!mb-6"
                 />
                 <TextField
                     label="Quantity"
                     fullWidth
                     type="number"
                     value={form.quantity}
-                    onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                    className="mb-4"
+                    onChange={(e) => setForm({...form, quantity: e.target.value})}
+                    className="!mb-6"
                 />
                 <Button
                     variant="contained"

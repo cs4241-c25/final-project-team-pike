@@ -25,11 +25,12 @@ export default function Login() {
         <div className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-r from-[#f8f9fa] via-orange-400 to-pink-400 text-black p-6 fixed inset-0">
             <Typography
                 variant="h3"
-                className="!mb-8 font-bold drop-shadow-lg text-center w-full"
-                style={{ fontFamily: "Helvetica Neue, sans-serif", whiteSpace: "nowrap" }}
+                className="!mb-8 font-bold drop-shadow-lg text-center w-full text-3xl md:text-5xl leading-tight"
+                style={{ fontFamily: "Helvetica Neue, sans-serif" }}
             >
                 {displayText}
             </Typography>
+
 
 
             <Typography

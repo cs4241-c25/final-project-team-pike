@@ -44,7 +44,7 @@ export default function ChoreApp() {
     };
 
     return (
-        <div className="fixed inset-0 flex flex-col items-center w-full min-h-screen text-center p-6 bg-white text-black pt-[150px]">
+        <div className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
             {/* Main Content */}
             <div className="flex w-full max-w-5xl gap-6">
                 {/* Sidebar */}
@@ -143,7 +143,7 @@ export default function ChoreApp() {
 
             {/* Modal for Adding Chores */}
             {showModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                <div className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                         <h2 className="text-2xl font-bold mb-4 text-pink-400">Add a Chore</h2>
 
