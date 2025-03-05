@@ -77,86 +77,88 @@ export default function GroceryTracker() {
     };
 
     return (
-        <div className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
+        <div
+            className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
             <Navbar/>
             <h1 className="text-3xl font-bold !mb-20 pt-[150px]">Grocery Tracker 🛒</h1>
 
-            {/* ✅ Toggle Switch */}
-            <Box className="mb-6">
-                <FormControlLabel
-                    control={
-                        <Switch
-                            checked={isNeededView}
-                            onChange={() => setIsNeededView(!isNeededView)}
-                            color="primary"
-                        />
-                    }
-                    label={isNeededView ? "Viewing Needed Items" : "Viewing Inventory"}
-                />
-            </Box>
+                {/* ✅ Toggle Switch */}
+                <Box className="mb-6">
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={isNeededView}
+                                onChange={() => setIsNeededView(!isNeededView)}
+                                color="primary"
+                            />
+                        }
+                        label={isNeededView ? "Viewing Needed Items" : "Viewing Inventory"}
+                    />
+                </Box>
 
-            {/* ✅ Grocery Input Form */}
-            <Box className="p-6 w-full max-w-3xl border border-gray-300 rounded-lg">
-                <Typography variant="h6" className="font-semibold !mb-7 justify-left">Add a Grocery Item</Typography>
-                <TextField
-                    label="Item Name"
-                    fullWidth
-                    value={form.item}
-                    onChange={(e) => setForm({...form, item: e.target.value})}
-                    className="!mb-6"
-                />
-                <TextField
-                    label="Quantity"
-                    fullWidth
-                    type="number"
-                    value={form.quantity}
-                    onChange={(e) => setForm({...form, quantity: e.target.value})}
-                    className="!mb-6"
-                />
-                <Button
-                    variant="contained"
-                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg w-full transition"
-                    onClick={addItem}
-                >
-                    {isNeededView ? "Add to Needed" : "Add to Inventory"}
-                </Button>
-            </Box>
+                {/* ✅ Grocery Input Form */}
+                <Box className="p-6 w-full max-w-3xl border border-gray-300 rounded-lg">
+                    <Typography variant="h6" className="font-semibold !mb-7 justify-left">Add a Grocery
+                        Item</Typography>
+                    <TextField
+                        label="Item Name"
+                        fullWidth
+                        value={form.item}
+                        onChange={(e) => setForm({...form, item: e.target.value})}
+                        className="!mb-6"
+                    />
+                    <TextField
+                        label="Quantity"
+                        fullWidth
+                        type="number"
+                        value={form.quantity}
+                        onChange={(e) => setForm({...form, quantity: e.target.value})}
+                        className="!mb-6"
+                    />
+                    <Button
+                        variant="contained"
+                        className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg w-full transition"
+                        onClick={addItem}
+                    >
+                        {isNeededView ? "Add to Needed" : "Add to Inventory"}
+                    </Button>
+                </Box>
 
-            {/* ✅ Grocery List */}
-            <Box className="p-6 mt-6 w-full max-w-3xl border border-gray-300 rounded-lg">
-                <Typography variant="h5" className="font-semibold mb-4">
-                    {isNeededView ? "Grocery Needed" : "Grocery Inventory"}
-                </Typography>
-                {(isNeededView ? needed : inventory).length === 0 ? (
-                    <Typography variant="body1" className="text-gray-500">No items yet. Add some!</Typography>
-                ) : (
-                    (isNeededView ? needed : inventory).map((item) => (
-                        <Box key={item.id} className="flex justify-between items-center p-2 border-b">
-                            <Typography variant="body1">{item.name} - {item.quantity}</Typography>
-                            <Box className="flex space-x-2">
-                                {/* ✅ Move button (only for "Needed") */}
-                                {isNeededView && (
+                {/* ✅ Grocery List */}
+                <Box className="p-6 mt-6 w-full max-w-3xl border border-gray-300 rounded-lg">
+                    <Typography variant="h5" className="font-semibold mb-4">
+                        {isNeededView ? "Grocery Needed" : "Grocery Inventory"}
+                    </Typography>
+                    {(isNeededView ? needed : inventory).length === 0 ? (
+                        <Typography variant="body1" className="text-gray-500">No items yet. Add some!</Typography>
+                    ) : (
+                        (isNeededView ? needed : inventory).map((item) => (
+                            <Box key={item.id} className="flex justify-between items-center p-2 border-b">
+                                <Typography variant="body1">{item.name} - {item.quantity}</Typography>
+                                <Box className="flex space-x-2">
+                                    {/* ✅ Move button (only for "Needed") */}
+                                    {isNeededView && (
+                                        <Button
+                                            variant="contained"
+                                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition"
+                                            onClick={() => moveToInventory(item.id)}
+                                        >
+                                            Move to Inventory
+                                        </Button>
+                                    )}
+                                    {/* ✅ Delete button */}
                                     <Button
                                         variant="contained"
-                                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition"
-                                        onClick={() => moveToInventory(item.id)}
+                                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition"
+                                        onClick={() => removeItem(item.id)}
                                     >
-                                        Move to Inventory
+                                        Delete
                                     </Button>
-                                )}
-                                {/* ✅ Delete button */}
-                                <Button
-                                    variant="contained"
-                                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition"
-                                    onClick={() => removeItem(item.id)}
-                                >
-                                    Delete
-                                </Button>
+                                </Box>
                             </Box>
-                        </Box>
-                    ))
-                )}
-            </Box>
-        </div>
-    );
-}
+                        ))
+                    )}
+                </Box>
+            </div>
+            );
+            }
