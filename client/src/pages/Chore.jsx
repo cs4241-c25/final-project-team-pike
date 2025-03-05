@@ -28,19 +28,69 @@ export default function ChoreApp() {
         fetchData();
     }, []);
 
-    const handleAddChore = () => {
-        setChores((prev) => ({
-            ...prev,
-            [newChore.category]: [...(prev[newChore.category] || []), newChore],
-        }));
-        setShowForm(false);
-        setNewChore({ name: "", deadline: "", assignee: "", category: "Cleaning", status: "Not Completed" });
+    const handleAddChore = async () => {
+        const newChoreData = {
+            title: newChore.name, // Assuming newChore.name corresponds to the title of the task
+            description: `Assigned to: ${newChore.assignee}, Status: ${newChore.status}`, // Create a description string based on available data
+            type: newChore.category, // Using the category as the task type
+            schedule: newChore.deadline, // Use the deadline as the schedule
+        };
+
+        try {
+            const response = await fetch("/api/tasks/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newChoreData),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Successfully added the chore, update the chores state
+                setChores((prev) => ({
+                    ...prev,
+                    [newChore.category]: [...(prev[newChore.category] || []), newChore],
+                }));
+                setShowForm(false);
+                setNewChore({ name: "", deadline: "", assignee: "", category: "Cleaning", status: "Not Completed" });
+            } else {
+                // Handle error from the backend
+                alert(`Error: ${data.error || "An error occurred while adding the chore"}`);
+            }
+        } catch (error) {
+            console.error("Error while adding chore:", error);
+            alert("An unexpected error occurred.");
+        }
     };
 
-    const updateStatus = (category, index, status) => {
+    const updateStatus = async (category, index, status) => {
         const updatedChores = { ...chores };
         updatedChores[category][index].status = status;
-        setChores(updatedChores);
+
+        try {
+            // Send the updated status to the backend via PUT request
+            const response = await fetch('http://localhost:3000/api/tasks/update-status', {
+                method: 'PUT', // Use PUT to update an existing task
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    taskId: updatedChores[category][index].id, // Task ID to identify the task
+                    status: status,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update status');
+            }
+
+            // If successful, update the state
+            setChores(updatedChores);
+        } catch (error) {
+            console.error('Error updating task status:', error);
+        }
     };
 
     return (
@@ -116,7 +166,7 @@ export default function ChoreApp() {
 
                                 <div className="flex justify-end gap-3">
                                     <button
-                                        className="bg-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-400 transition font-medium"
+                                        className="bg-gray-300 text-white px-4 py-2 rounded-lg hover:bg-gray-400 transition font-medium"
                                         onClick={() => setShowForm(false)}
                                     >
                                         Cancel
@@ -159,7 +209,7 @@ export default function ChoreApp() {
                                                 Done
                                             </button>
                                             <button
-                                                className="px-4 py-2 rounded-lg bg-gray-300 text-black hover:bg-gray-400 transition font-medium"
+                                                className="px-4 py-2 rounded-lg bg-gray-300 text-white hover:bg-gray-400 transition font-medium"
                                                 onClick={() => updateStatus(selectedCategory, index, "Not Completed")}
                                             >
                                                 Not Completed

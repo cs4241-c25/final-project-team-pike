@@ -273,6 +273,38 @@ server.post("/api/org/create",
     }
 );
 
+// Endpoint to update task status
+server.put("/api/tasks/update-status", ensureAuth, async (request, response) => {
+    const { taskId, status } = request.body;
+
+    if (!taskId || !status) {
+        return response.status(400).json({ error: "Missing taskId or status" });
+    }
+
+    try {
+        const task = await dbGet("SELECT * FROM Tasks WHERE id = ?", taskId);
+
+        if (!task) {
+            return response.status(404).json({ error: "Task not found" });
+        }
+
+        const orgID = await orgLookup(request.user.username);
+
+        if (task.orgID !== orgID) {
+            return response.status(403).json({ error: "You are not authorized to update this task" });
+        }
+
+        // Update the task's status
+        await dbRun("UPDATE Tasks SET status = ? WHERE id = ?", status, taskId);
+
+        response.status(200).json({ message: "Task status updated successfully" });
+    } catch (error) {
+        console.error("Error updating task status:", error);
+        response.status(500).json({ error: "Failed to update task status" });
+    }
+});
+
+
 server.post("/api/tasks/create",
     ensureAuth,
     body('title').isString().escape(),
