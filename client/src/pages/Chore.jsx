@@ -37,12 +37,13 @@ export default function ChoreApp() {
         };
 
         try {
-            const response = await fetch("/api/tasks/create", {
+            const response = await fetch("http://localhost:3000/api/tasks/create", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(newChoreData),
+                credentials: "include"
             });
 
             const data = await response.json();
@@ -79,6 +80,7 @@ export default function ChoreApp() {
                 body: JSON.stringify({
                     taskId: updatedChores[category][index].id, // Task ID to identify the task
                     status: status,
+                    credentials: "include"
                 }),
             });
 

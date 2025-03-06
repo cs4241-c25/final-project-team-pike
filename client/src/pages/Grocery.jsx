@@ -37,7 +37,7 @@ export default function GroceryTracker() {
             listType: isNeededView ? "needed" : "inventory",
         };
 
-        fetch("/api/groceries", {
+        fetch("http://localhost:3000/api/groceries", {
             method: "POST",
             headers: { "Content-Type": "application/json", "x-username": "exampleUser" },
             body: JSON.stringify(newItem),
@@ -53,7 +53,7 @@ export default function GroceryTracker() {
 
     // ✅ Move an item from "Needed" to "Inventory"
     const moveToInventory = (id) => {
-        fetch(`/api/groceries/${id}`, {
+        fetch(`http://localhost:3000/api/groceries/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json", "x-username": "exampleUser" },
             body: JSON.stringify({ listType: "inventory" }),
@@ -68,13 +68,14 @@ export default function GroceryTracker() {
 
     // ✅ Delete a grocery item
     const removeItem = (id) => {
-        fetch(`/api/groceries/${id}`, { method: "DELETE", headers: { "x-username": "exampleUser" } })
+        fetch(`http://localhost:3000/api/groceries/${id}`, { method: "DELETE", headers: { "x-username": "exampleUser" } })
             .then(() => {
                 console.log("Deleted item ID:", id);
                 fetchGroceries(); // ✅ Refresh list after deletion
             })
             .catch((error) => console.error("Error deleting item:", error));
     };
+
 
     return (
         <div
