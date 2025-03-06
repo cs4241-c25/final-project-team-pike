@@ -7,6 +7,7 @@ const GitHubStrategy = require("passport-github2").Strategy
 const {query, body, validationResult} = require('express-validator');
 const sqlite3 = require('sqlite3')
 const { promisify } = require('util');
+const {response} = require("express");
 
 // constants
 const port = 3000
@@ -354,7 +355,25 @@ server.post('/api/tasks/instance/complete',
         await dbRun("UPDATE TaskInstances SET status=? WHERE id=?", status, request.body.instanceID)
         response.status(200)
     })
-// ------------------------ start server ------------------------ 
+
+server.post("/api/tasks/instance/cancel",
+    ensureAuth,
+    body("instanceID").isNumeric(),
+    async (request, response) => {
+        const record = await dbGet("SELECT * FROM TaskInstances I INNER JOIN Tasks T on I.taskID = T.id WHERE I.id = ?")
+        if (!record){
+            response.status(404).json({error: "no matching task instance!"})
+            return
+        }
+        if (record.orgID !== orgLookup(request.user.username)){
+            response.status(403).json({error: "Not authorized, not your org!"})
+            return
+        }
+        await dbRun("UPDATE TaskInstances SET status = ? WHERE id=?","cancelled", request.body.instanceID);
+        response.status(200).json({status: "ok"})
+
+    })
+// ------------------------ start server ------------------------
 async function startServer() {
     server.listen(process.env.PORT || port, () => {
         console.log(`Server is running on port ${port}`)
