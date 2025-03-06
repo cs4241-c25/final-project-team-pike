@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { AddCircleOutline } from "@mui/icons-material";
 // import Layout from "../components/Layout";
-import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
-import { TextField, Typography, Paper } from "@mui/material";
-
 
 export default function ChoreApp() {
     const [chores, setChores] = useState({});
@@ -31,27 +28,79 @@ export default function ChoreApp() {
         fetchData();
     }, []);
 
-    const handleAddChore = () => {
-        setChores((prev) => ({
-            ...prev,
-            [newChore.category]: [...(prev[newChore.category] || []), newChore],
-        }));
-        setShowForm(false);
-        setNewChore({ name: "", deadline: "", assignee: "", category: "Cleaning", status: "Not Completed" });
+    const handleAddChore = async () => {
+        const newChoreData = {
+            title: newChore.name, // Assuming newChore.name corresponds to the title of the task
+            description: `Assigned to: ${newChore.assignee}, Status: ${newChore.status}`, // Create a description string based on available data
+            type: newChore.category, // Using the category as the task type
+            schedule: newChore.deadline, // Use the deadline as the schedule
+        };
+
+        try {
+            const response = await fetch("http://localhost:3000/api/tasks/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newChoreData),
+                credentials: "include"
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Successfully added the chore, update the chores state
+                setChores((prev) => ({
+                    ...prev,
+                    [newChore.category]: [...(prev[newChore.category] || []), newChore],
+                }));
+                setShowForm(false);
+                setNewChore({ name: "", deadline: "", assignee: "", category: "Cleaning", status: "Not Completed" });
+            } else {
+                // Handle error from the backend
+                alert(`Error: ${data.error || "An error occurred while adding the chore"}`);
+            }
+        } catch (error) {
+            console.error("Error while adding chore:", error);
+            alert("An unexpected error occurred.");
+        }
     };
 
-    const updateStatus = (category, index, status) => {
+    const updateStatus = async (category, index, status) => {
         const updatedChores = { ...chores };
         updatedChores[category][index].status = status;
-        setChores(updatedChores);
+
+        try {
+            // Send the updated status to the backend via PUT request
+            const response = await fetch('http://localhost:3000/api/tasks/update-status', {
+                method: 'PUT', // Use PUT to update an existing task
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    taskId: updatedChores[category][index].id, // Task ID to identify the task
+                    status: status,
+                    credentials: "include"
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update status');
+            }
+
+            // If successful, update the state
+            setChores(updatedChores);
+        } catch (error) {
+            console.error('Error updating task status:', error);
+        }
     };
 
     return (
-            <div className="w-screen min-h-screen bg-white flex flex-col items-center px-4 py-8 pt-[150px]">
+            <div className="w-screen flex flex-col items-center justify-start bg-white text-black">
                 {/* Main Content */}
-                <div className="flex w-full max-w-5xl gap-6 text-black">
+                <div className="flex w-full max-w-5xl gap-6">
                     {/* Sidebar */}
-                    <aside className="w-1/4 p-6 border-r border-white">
+                    <aside className="w-1/4 p-6 border-r border-gray-300">
                         <h2 className="text-xl font-bold mb-6">Categories</h2>
                         <div className="space-y-3">
                             {categories.map((category) => (
@@ -83,76 +132,55 @@ export default function ChoreApp() {
 
                         {/* Inline Chore Form - Appears When "Add Chore" is Clicked */}
                         {showForm && (
-
-                            <Paper elevation={3} className="p-6 rounded-lg mb-6">
-                                <Typography variant="h5" className="font-bold text-pink-400 mb-4">
-                                    Add a Chore
-                                </Typography>
-
-                                {/* Task Name Input */}
-                                <TextField
-                                    label="Task Name"
-                                    fullWidth
-                                    variant="outlined"
+                            <div className="bg-white p-6 rounded-lg shadow-md border mb-6">
+                                <h2 className="text-2xl font-bold mb-4 text-pink-400">Add a Chore</h2>
+                                <input
+                                    type="text"
+                                    placeholder="Task Name"
                                     value={newChore.name}
                                     onChange={(e) => setNewChore({ ...newChore, name: e.target.value })}
-                                    className="mb-3"
+                                    className="w-full mb-3 p-3 border rounded-lg bg-gray-100"
                                 />
-
-                                {/* Deadline Input */}
-                                <TextField
-                                    label="Deadline"
+                                <input
                                     type="datetime-local"
-                                    fullWidth
-                                    variant="outlined"
-                                    InputLabelProps={{ shrink: true }}
                                     value={newChore.deadline}
                                     onChange={(e) => setNewChore({ ...newChore, deadline: e.target.value })}
-                                    className="mb-3"
+                                    className="w-full mb-3 p-3 border rounded-lg bg-gray-100"
                                 />
-
-                                {/* Assign To Input */}
-                                <TextField
-                                    label="Assign To"
-                                    fullWidth
-                                    variant="outlined"
+                                <input
+                                    type="text"
+                                    placeholder="Assign To"
                                     value={newChore.assignee}
                                     onChange={(e) => setNewChore({ ...newChore, assignee: e.target.value })}
-                                    className="mb-3"
+                                    className="w-full mb-3 p-3 border rounded-lg bg-gray-100"
                                 />
-                            <FormControl fullWidth className="mb-3">
-                                    <InputLabel>Category</InputLabel>
-                                    <Select
-                                        value={newChore.category}
-                                        onChange={(e) => setNewChore({ ...newChore, category: e.target.value })}
-                                        label="Category"
-                                    >
-                                        {categories.map((category) => (
-                                            <MenuItem key={category} value={category}>
-                                                {category}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-
+                                <select
+                                    value={newChore.category}
+                                    onChange={(e) => setNewChore({ ...newChore, category: e.target.value })}
+                                    className="w-full mb-3 p-3 border rounded-lg bg-gray-100"
+                                >
+                                    {categories.map((category) => (
+                                        <option key={category} value={category}>
+                                            {category}
+                                        </option>
+                                    ))}
+                                </select>
 
                                 <div className="flex justify-end gap-3">
                                     <button
-                                        className="bg-gray-300 text-red-600 px-4 py-2 rounded-lg hover:bg-gray-400 hover:scale-110 transition-all font-medium"
+                                        className="bg-gray-300 text-white px-4 py-2 rounded-lg hover:bg-gray-400 transition font-medium"
                                         onClick={() => setShowForm(false)}
                                     >
                                         Cancel
                                     </button>
-
                                     <button
-                                        className= "bg-gray-300 text-white px-4 py-2 rounded-lg hover:bg-gray-400 hover:scale-110 transition-all font-medium"
+                                        className="bg-pink-400 text-white px-4 py-2 rounded-lg hover:bg-pink-500 transition font-medium"
                                         onClick={handleAddChore}
                                     >
                                         Save
                                     </button>
                                 </div>
-                            </Paper>
+                            </div>
                         )}
 
                         {/* List of Chores */}
@@ -177,13 +205,13 @@ export default function ChoreApp() {
                                         </div>
                                         <div className="flex gap-3">
                                             <button
-                                                className="bg-gray-100 text-green-600 px-4 py-2 rounded-lg hover:bg-gray-400 hover:scale-110 transition-all font-medium"
+                                                className="px-4 py-2 rounded-lg bg-pink-400 text-white hover:bg-pink-500 transition font-medium"
                                                 onClick={() => updateStatus(selectedCategory, index, "Done")}
                                             >
                                                 Done
                                             </button>
                                             <button
-                                                className="bg-gray-100 text-red-600 px-4 py-2 rounded-lg hover:bg-gray-400 hover:scale-110 transition-all font-medium"
+                                                className="px-4 py-2 rounded-lg bg-gray-300 text-white hover:bg-gray-400 transition font-medium"
                                                 onClick={() => updateStatus(selectedCategory, index, "Not Completed")}
                                             >
                                                 Not Completed

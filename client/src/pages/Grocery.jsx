@@ -79,6 +79,7 @@ export default function GroceryTracker() {
             .catch((error) => console.error("Error deleting item:", error));
     };
 
+
     return (
         <div
             className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
