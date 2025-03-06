@@ -331,7 +331,7 @@ server.post("/api/tasks/create",
             response.status(500).json({error: e})
             return
         }
-        // todo: if schedule is set, populate downstream instances
+        // todo: immediate instance create
         response.status(200).json({message: 'task created'})
     }
 );
