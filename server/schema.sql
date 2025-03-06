@@ -11,9 +11,9 @@ CREATE TABLE IF NOT EXISTS Organizations
 
 CREATE TABLE IF NOT EXISTS Users
 (
-    github     TEXT PRIMARY KEY,
-    realName   TEXT NOT NULL,
-    orgID      INTEGER,
+    github   TEXT PRIMARY KEY,
+    realName TEXT NOT NULL,
+    orgID    INTEGER,
     FOREIGN KEY (orgID) REFERENCES Organizations (id)
 );
 
@@ -64,11 +64,10 @@ CREATE TABLE IF NOT EXISTS Inventory
 
 CREATE TABLE IF NOT EXISTS Expenses
 (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
     description TEXT NOT NULL,
-    payerID TEXT,
+    payerID     TEXT,
     amountPayed REAL NOT NULL,
-    payedOff INTEGER DEFAULT 0,
+    payedOff    INTEGER DEFAULT 0,
     FOREIGN KEY (payerID) REFERENCES Users (github)
 );
-

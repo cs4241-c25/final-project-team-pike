@@ -145,20 +145,13 @@ server.get("/api/org/:orgID/users", ensureAuth, async (request, response) => {
         })
         return
     }
-    let isMember = false
-    let out = []
-    for (let i = 0; i < users.length; i++) {
-        if (users[i].github === request.user.username) {
-            isMember = true
-        }
-        out.push("{realName: " + users[i].realName + ", github: " + users[i].github + "}")
-    }
-    if (!isMember) {
+    const myRec = await dbGet("SELECT github FROM Users WHERE github = ? AND orgID = ?",request.user.username, orgID)
+    if (!myRec) {
         response.status(403).json({error: "Requesting user not a member of organization", orgID: orgID})
         return
     }
 
-    response.status(200).json(out);
+    response.status(200).json(users);
 });
 
 server.get('/api/org/inviteInfo',
@@ -502,6 +495,10 @@ server.put("/api/groceries/:id", async (req, res) => {
         res.status(500).json({error: "Failed to move item", details: error.message});
     }
 });
+
+server.post("/api/payments/add",
+    ensureAuth,
+    body(''))
 
 // ✅ Delete a grocery item
 server.delete("/api/groceries/:id", async (req, res) => {
