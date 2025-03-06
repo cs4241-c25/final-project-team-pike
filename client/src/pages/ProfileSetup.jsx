@@ -58,6 +58,7 @@ export default function ProfileSetup() {
                 <Card className="p-10 shadow-xl w-full max-w-3xl text-center rounded-3xl border border-gray-200 bg-white">
                     <Box className="space-y-6 w-full">
                         {/* Name Input */}
+                        {/*Feature request: also call handleDone on enter key*/}
                         <TextField
                             className="!mb-8"
                             label="Enter your name"

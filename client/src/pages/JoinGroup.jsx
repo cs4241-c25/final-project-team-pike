@@ -1,9 +1,18 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Typography, Box } from "@mui/material";
+import {
+    Button,
+    Typography,
+    Box,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions, DialogContentText
+} from "@mui/material";
 import RoommateSVG from "../assets/roommate.svg"; // Import the SVG file
 import Confetti from "react-confetti"; // 🎉 Import the confetti effect
-import { useWindowSize } from "react-use"; // Helps make confetti responsive
+import { useWindowSize } from "react-use";
+// import * as PropTypes from "prop-types"; // Helps make confetti responsive
 
 const BACKEND = "http://localhost:3000"
 
@@ -14,6 +23,28 @@ export default function JoinGroup() {
     const [showConfetti, setShowConfetti] = useState(false);
     const { width, height } = useWindowSize(); // Get screen size for confetti
 
+    const [open, setOpen] = useState(false);
+    const [orgName, setOrgName] = useState("Invalid name");
+    const [orgDesc, setOrgDesc] = useState("Invalid description")
+    const dialogClose = () => {
+        setOpen(false)
+    }
+    const setOrgInfo = async () => {
+
+        let invite = "";
+        invite = inviteCode.join("");
+        console.log("Sending code "+invite)
+        const request = await fetch(BACKEND+"/api/org/inviteInfo?code="+invite,{
+            method: "GET",
+            credentials: "include"
+        });
+        if (!request.ok){
+            return}
+        const info = await request.json()
+        setOrgName(info.orgName)
+        setOrgDesc(info.orgDesc)
+        setOpen(true)
+    }
     // Handle character entry
     const handleChange = (index, value) => {
         if (!/^[a-zA-Z0-9]?$/.test(value)) return; // Allow only letters and numbers
@@ -22,8 +53,14 @@ export default function JoinGroup() {
         setInviteCode(newCode);
 
         // Move focus to next box if a character is entered
-        if (value && index < 5) {
-            inputRefs.current[index + 1].focus();
+        if (value) {
+            if (index === 5){
+                console.log("Sending code "+ newCode)
+                setOrgInfo().then()
+            }
+            else {
+                inputRefs.current[index + 1].focus();
+            }
         }
     };
 
@@ -44,6 +81,7 @@ export default function JoinGroup() {
 
         console.log("Joining with invite code:", codeString);
         fetch(BACKEND+"/api/org/enroll", {
+            headers: { "Content-Type": "application/json" },
             method: "POST",
             body: JSON.stringify({inviteCode: codeString}),
             credentials: "include",
@@ -91,41 +129,53 @@ export default function JoinGroup() {
                     />
                 ))}
             </Box>
+            <Dialog
+            open={open}
+            onClose={dialogClose}>
+                <DialogTitle>{orgName}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {orgDesc}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    {/* 🚀 Cool Join Button with Confetti Effect */}
+                    <Button
+                        variant="contained"
+                        onClick={handleJoin}
+                        disableElevation
+                        sx={{
+                            backgroundColor: "black !important",
+                            color: "white !important",
+                            borderRadius: "999px",
+                            padding: "14px 28px",
+                            fontSize: "1.25rem",
+                            fontWeight: "bold",
+                            textTransform: "none",
+                            width: "100%",
+                            maxWidth: "20rem",
+                            transition: "all 0.3s ease-in-out",
+                            border: "2px solid transparent",
+                            "&:hover": {
+                                backgroundColor: "#ec4899 !important",
+                                color: "white !important",
+                                border: "2px solid #ec4899",
+                            },
+                            "&:active": {
+                                backgroundColor: "#ec4899 !important",
+                                transform: "scale(0.95)",
+                            },
+                            "&:focus": {
+                                outline: "none",
+                                boxShadow: "none",
+                            },
+                        }}
+                    >
+                        🎉 Join Group
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
-            {/* 🚀 Cool Join Button with Confetti Effect */}
-            <Button
-                variant="contained"
-                onClick={handleJoin}
-                disableElevation
-                sx={{
-                    backgroundColor: "black !important",
-                    color: "white !important",
-                    borderRadius: "999px",
-                    padding: "14px 28px",
-                    fontSize: "1.25rem",
-                    fontWeight: "bold",
-                    textTransform: "none",
-                    width: "100%",
-                    maxWidth: "20rem",
-                    transition: "all 0.3s ease-in-out",
-                    border: "2px solid transparent",
-                    "&:hover": {
-                        backgroundColor: "#ec4899 !important",
-                        color: "white !important",
-                        border: "2px solid #ec4899",
-                    },
-                    "&:active": {
-                        backgroundColor: "#ec4899 !important",
-                        transform: "scale(0.95)",
-                    },
-                    "&:focus": {
-                        outline: "none",
-                        boxShadow: "none",
-                    },
-                }}
-            >
-                🎉 Join Group
-            </Button>
         </div>
     );
 }
