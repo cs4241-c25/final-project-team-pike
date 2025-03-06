@@ -36,15 +36,15 @@ export default function Login() {
     }, []);
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-r from-[#f8f9fa] via-orange-400 to-pink-400 text-black p-6 fixed inset-0">
+        <div
+            className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-r from-[#f8f9fa] via-orange-400 to-pink-400 text-black p-6 fixed inset-0">
             <Typography
                 variant="h3"
                 className="!mb-8 font-bold drop-shadow-lg text-center w-full text-3xl md:text-5xl leading-tight"
-                style={{ fontFamily: "Helvetica Neue, sans-serif" }}
+                style={{fontFamily: "Helvetica Neue, sans-serif"}}
             >
                 {displayText}
             </Typography>
-
 
 
             <Typography
@@ -74,7 +74,7 @@ export default function Login() {
                     },
                 }}
             >
-                <GitHub sx={{ marginRight: "8px", color: "inherit" }} /> Log in with GitHub
+                <GitHub sx={{marginRight: "8px", color: "inherit"}}/> Log in with GitHub
             </Button>
 
 

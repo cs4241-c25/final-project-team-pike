@@ -10,7 +10,7 @@ export default function GroceryTracker() {
 
     // ✅ Fetch groceries from backend (Runs on mount & when an item is added/removed)
     const fetchGroceries = useCallback(() => {
-        fetch("/api/groceries", { headers: { "x-username": "exampleUser" } })
+        fetch("http://localhost:3000/api/groceries", { headers: { "x-username": "exampleUser" } })
             .then((response) => response.json())
             .then((data) => {
                 console.log("Fetched groceries:", data);
@@ -27,8 +27,8 @@ export default function GroceryTracker() {
     // ✅ Add a grocery item
     const addItem = () => {
         if (!form.item || !form.quantity) return;
-
         const newItem = {
+
             name: form.item,
             description: "",
             quantity: parseInt(form.quantity),
@@ -41,6 +41,7 @@ export default function GroceryTracker() {
             method: "POST",
             headers: { "Content-Type": "application/json", "x-username": "exampleUser" },
             body: JSON.stringify(newItem),
+            credentials: "include"
         })
             .then((response) => response.json())
             .then((data) => {
@@ -56,7 +57,9 @@ export default function GroceryTracker() {
         fetch(`http://localhost:3000/api/groceries/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json", "x-username": "exampleUser" },
-            body: JSON.stringify({ listType: "inventory" }),
+            body: JSON.stringify({
+                listType: "inventory",
+                credentials: "include" }),
         })
             .then((response) => response.json())
             .then((updatedItem) => {
@@ -81,7 +84,7 @@ export default function GroceryTracker() {
         <div
             className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
             <Navbar/>
-            <h1 className="text-3xl font-bold !mb-20 pt-[150px]">Grocery Tracker 🛒</h1>
+            <h1 className="text-3xl font-bold !mb-20">Grocery Tracker 🛒</h1>
 
                 {/* ✅ Toggle Switch */}
                 <Box className="mb-6">
