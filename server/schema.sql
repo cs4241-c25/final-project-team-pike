@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS Organizations
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
     description TEXT,
-    profilePic  TEXT,
     organizerID TEXT,
+    inviteCode  TEXT,
     FOREIGN KEY (organizerID) REFERENCES Users (github)
 );
 
@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS Users
 (
     github     TEXT PRIMARY KEY,
     realName   TEXT NOT NULL,
-    profilePic TEXT,
     orgID      INTEGER,
     FOREIGN KEY (orgID) REFERENCES Organizations (id)
 );

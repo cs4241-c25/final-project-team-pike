@@ -230,24 +230,28 @@ server.post("/api/user/create",
     }
 );
 
-server.post("/api/user/enroll",
+server.post("/api/org/enroll",
     ensureAuth,
-    body("orgID").isInt(),
+    body("inviteCode").isAlphanumeric().isLength(6),
     async (request, response) => {
-        const orgID = request.body.orgID
         const userRecord = await dbGet("SELECT * FROM Users WHERE github = ?", request.user.username)
         if (!userRecord) {
-            response.status(400).json({error: 'User does not exist'})
+            response.status(400).json({error: 'User does not exist!'})
             return
         }
         if (userRecord.orgID){
             response.status(400).json({error: 'User already enrolled', orgID: " + userRecord.orgID + "})
             return
         }
+        const orgID = await dbGet("SELECT id FROM Organizations WHERE inviteCode = ?", request.body.inviteCode)
+        if (!orgID){
+            response.status(400).json({error: "Invalid invite code"})
+            return
+        }
         try {
             await dbRun("UPDATE Users SET orgID = ? WHERE github = ?", orgID, request.user.username)
         } catch (e) {
-            response.status(500).json({error: " + e + "})
+            response.status(500).json({error: e })
             return
         }
         response.status(200).json({message: 'user enrolled'})
