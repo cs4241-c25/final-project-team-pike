@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS Organizations
 (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
-    description TEXT,
     organizerID TEXT,
     inviteCode  TEXT,
     FOREIGN KEY (organizerID) REFERENCES Users (github)
@@ -62,3 +61,14 @@ CREATE TABLE IF NOT EXISTS Inventory
     notes       TEXT,
     FOREIGN KEY (orgID) REFERENCES Organizations (id)
 );
+
+CREATE TABLE IF NOT EXISTS Expenses
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    description TEXT NOT NULL,
+    payerID TEXT,
+    amountPayed REAL NOT NULL,
+    payedOff INTEGER DEFAULT 0,
+    FOREIGN KEY (payerID) REFERENCES Users (github)
+);
+

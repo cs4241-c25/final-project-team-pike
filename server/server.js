@@ -289,19 +289,26 @@ server.post("/api/org/create",
     ensureAuth,
     body("name").isString().escape(),
     async (request, response) => {
-        const org = request.body
+        const orgName = request.body.name
+        const organizer = request.user.username
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let code = "";
+        for (let i = 0; i < 6; i++) {
+            code += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
         const existing = await dbGet("SELECT * FROM Organizations WHERE name = ?", org.name)
         if (existing) {
             response.status(400).json({error: "Already exists", orgID: existing.id})
             return
         }
         try {
-            await dbRun("INSERT INTO Organizations (name) VALUES (?)", org.name)
+            await dbRun("INSERT INTO Organizations (name, organizerID, inviteCode) VALUES (?,?,?)", orgName, organizer, code)
         } catch (e) {
             response.status(500).json({error: e})
             return
         }
-        response.status(200).json({message: 'organization created'})
+        response.status(200).json({message: 'organization created',
+        inviteCode: code})
     }
 );
 
