@@ -10,7 +10,7 @@ export default function GroceryTracker() {
 
     // ✅ Fetch groceries from backend (Runs on mount & when an item is added/removed)
     const fetchGroceries = useCallback(() => {
-        fetch("/api/groceries", { headers: { "x-username": "exampleUser" } })
+        fetch("http://localhost:3000/api/groceries", { headers: { "x-username": "exampleUser" } })
             .then((response) => response.json())
             .then((data) => {
                 console.log("Fetched groceries:", data);
@@ -27,8 +27,8 @@ export default function GroceryTracker() {
     // ✅ Add a grocery item
     const addItem = () => {
         if (!form.item || !form.quantity) return;
-
         const newItem = {
+
             name: form.item,
             description: "",
             quantity: parseInt(form.quantity),
@@ -37,10 +37,11 @@ export default function GroceryTracker() {
             listType: isNeededView ? "needed" : "inventory",
         };
 
-        fetch("/api/groceries", {
+        fetch("http://localhost:3000/api/groceries", {
             method: "POST",
             headers: { "Content-Type": "application/json", "x-username": "exampleUser" },
             body: JSON.stringify(newItem),
+            credentials: "include"
         })
             .then((response) => response.json())
             .then((data) => {
@@ -53,10 +54,12 @@ export default function GroceryTracker() {
 
     // ✅ Move an item from "Needed" to "Inventory"
     const moveToInventory = (id) => {
-        fetch(`/api/groceries/${id}`, {
+        fetch(`http://localhost:3000/api/groceries/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json", "x-username": "exampleUser" },
-            body: JSON.stringify({ listType: "inventory" }),
+            body: JSON.stringify({
+                listType: "inventory",
+                credentials: "include" }),
         })
             .then((response) => response.json())
             .then((updatedItem) => {
@@ -68,7 +71,7 @@ export default function GroceryTracker() {
 
     // ✅ Delete a grocery item
     const removeItem = (id) => {
-        fetch(`/api/groceries/${id}`, { method: "DELETE", headers: { "x-username": "exampleUser" } })
+        fetch(`http://localhost:3000/api/groceries/${id}`, { method: "DELETE", headers: { "x-username": "exampleUser" } })
             .then(() => {
                 console.log("Deleted item ID:", id);
                 fetchGroceries(); // ✅ Refresh list after deletion
