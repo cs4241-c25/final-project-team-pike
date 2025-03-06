@@ -11,7 +11,7 @@ export default function ExpenseTracker() {
     const [removeIndex, setRemoveIndex] = useState(null);
 
     const addExpense = () => {
-        if (editIndex !== null) {
+        if (editIndex !== null) {className="bg-gray-300 text-red-600 px-4 py-2 rounded-lg hover:bg-gray-400 hover:scale-110 transition-all font-medium"
             const updatedExpenses = [...expenses];
             updatedExpenses[editIndex] = { ...form, amount: parseFloat(form.amount) };
             setExpenses([...updatedExpenses]); // Ensure state updates

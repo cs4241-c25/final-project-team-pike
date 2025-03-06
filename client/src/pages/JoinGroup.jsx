@@ -61,7 +61,7 @@ export default function JoinGroup() {
             {/* Title in Helvetica Neue with Black Color */}
             <h1 className="text-xl font-bold mb-6">Join a Roommate Group</h1>
 
-            <Typography variant="body1" className="mb-8 text-center text-gray-600">
+            <Typography variant="body1" className="!mb-10 text-center text-gray-600">
                 Enter your 6-character invite code to join your roommate group.
             </Typography>
 

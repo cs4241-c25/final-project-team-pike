@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { AddCircleOutline } from "@mui/icons-material";
 // import Layout from "../components/Layout";
+import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { TextField, Typography, Paper } from "@mui/material";
+
 
 export default function ChoreApp() {
     const [chores, setChores] = useState({});
@@ -44,11 +47,11 @@ export default function ChoreApp() {
     };
 
     return (
-            <div className="w-screen flex flex-col items-center justify-start bg-white text-black">
+            <div className="w-screen min-h-screen bg-white flex flex-col items-center px-4 py-8 pt-[150px]">
                 {/* Main Content */}
-                <div className="flex w-full max-w-5xl gap-6">
+                <div className="flex w-full max-w-5xl gap-6 text-black">
                     {/* Sidebar */}
-                    <aside className="w-1/4 p-6 border-r border-gray-300">
+                    <aside className="w-1/4 p-6 border-r border-white">
                         <h2 className="text-xl font-bold mb-6">Categories</h2>
                         <div className="space-y-3">
                             {categories.map((category) => (
@@ -80,55 +83,76 @@ export default function ChoreApp() {
 
                         {/* Inline Chore Form - Appears When "Add Chore" is Clicked */}
                         {showForm && (
-                            <div className="bg-white p-6 rounded-lg shadow-md border mb-6">
-                                <h2 className="text-2xl font-bold mb-4 text-pink-400">Add a Chore</h2>
-                                <input
-                                    type="text"
-                                    placeholder="Task Name"
+
+                            <Paper elevation={3} className="p-6 rounded-lg mb-6">
+                                <Typography variant="h5" className="font-bold text-pink-400 mb-4">
+                                    Add a Chore
+                                </Typography>
+
+                                {/* Task Name Input */}
+                                <TextField
+                                    label="Task Name"
+                                    fullWidth
+                                    variant="outlined"
                                     value={newChore.name}
                                     onChange={(e) => setNewChore({ ...newChore, name: e.target.value })}
-                                    className="w-full mb-3 p-3 border rounded-lg bg-gray-100"
+                                    className="mb-3"
                                 />
-                                <input
+
+                                {/* Deadline Input */}
+                                <TextField
+                                    label="Deadline"
                                     type="datetime-local"
+                                    fullWidth
+                                    variant="outlined"
+                                    InputLabelProps={{ shrink: true }}
                                     value={newChore.deadline}
                                     onChange={(e) => setNewChore({ ...newChore, deadline: e.target.value })}
-                                    className="w-full mb-3 p-3 border rounded-lg bg-gray-100"
+                                    className="mb-3"
                                 />
-                                <input
-                                    type="text"
-                                    placeholder="Assign To"
+
+                                {/* Assign To Input */}
+                                <TextField
+                                    label="Assign To"
+                                    fullWidth
+                                    variant="outlined"
                                     value={newChore.assignee}
                                     onChange={(e) => setNewChore({ ...newChore, assignee: e.target.value })}
-                                    className="w-full mb-3 p-3 border rounded-lg bg-gray-100"
+                                    className="mb-3"
                                 />
-                                <select
-                                    value={newChore.category}
-                                    onChange={(e) => setNewChore({ ...newChore, category: e.target.value })}
-                                    className="w-full mb-3 p-3 border rounded-lg bg-gray-100"
-                                >
-                                    {categories.map((category) => (
-                                        <option key={category} value={category}>
-                                            {category}
-                                        </option>
-                                    ))}
-                                </select>
+                            <FormControl fullWidth className="mb-3">
+                                    <InputLabel>Category</InputLabel>
+                                    <Select
+                                        value={newChore.category}
+                                        onChange={(e) => setNewChore({ ...newChore, category: e.target.value })}
+                                        label="Category"
+                                    >
+                                        {categories.map((category) => (
+                                            <MenuItem key={category} value={category}>
+                                                {category}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
+
 
                                 <div className="flex justify-end gap-3">
                                     <button
-                                        className="bg-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-400 transition font-medium"
+                                        className="bg-gray-300 text-red-600 px-4 py-2 rounded-lg hover:bg-gray-400 hover:scale-110 transition-all font-medium"
                                         onClick={() => setShowForm(false)}
                                     >
                                         Cancel
                                     </button>
+
                                     <button
-                                        className="bg-pink-400 text-white px-4 py-2 rounded-lg hover:bg-pink-500 transition font-medium"
+                                        className= "bg-gray-300 text-white px-4 py-2 rounded-lg hover:bg-gray-400 hover:scale-110 transition-all font-medium"
                                         onClick={handleAddChore}
                                     >
                                         Save
                                     </button>
                                 </div>
-                            </div>
+                            </Paper>
                         )}
 
                         {/* List of Chores */}
@@ -153,13 +177,13 @@ export default function ChoreApp() {
                                         </div>
                                         <div className="flex gap-3">
                                             <button
-                                                className="px-4 py-2 rounded-lg bg-pink-400 text-white hover:bg-pink-500 transition font-medium"
+                                                className="bg-gray-100 text-green-600 px-4 py-2 rounded-lg hover:bg-gray-400 hover:scale-110 transition-all font-medium"
                                                 onClick={() => updateStatus(selectedCategory, index, "Done")}
                                             >
                                                 Done
                                             </button>
                                             <button
-                                                className="px-4 py-2 rounded-lg bg-gray-300 text-black hover:bg-gray-400 transition font-medium"
+                                                className="bg-gray-100 text-red-600 px-4 py-2 rounded-lg hover:bg-gray-400 hover:scale-110 transition-all font-medium"
                                                 onClick={() => updateStatus(selectedCategory, index, "Not Completed")}
                                             >
                                                 Not Completed

@@ -80,7 +80,7 @@ export default function GroceryTracker() {
         <div
             className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
             <Navbar/>
-            <h1 className="text-3xl font-bold !mb-20 pt-[150px]">Grocery Tracker 🛒</h1>
+            <h1 className="text-3xl font-bold !mb-20">Grocery Tracker 🛒</h1>
 
                 {/* ✅ Toggle Switch */}
                 <Box className="mb-6">
