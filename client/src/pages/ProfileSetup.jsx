@@ -15,9 +15,11 @@ export default function ProfileSetup() {
 
     const handleDone = () => {
         if (name) {
+            console.log("Sending "+JSON.stringify({name: name}))
             fetch(BACKEND+"/api/user/create", {
+                headers: { "Content-Type": "application/json" },
                 method: "POST",
-                body: JSON.stringify({realName: name}),
+                body: JSON.stringify({name: name}),
                 credentials: "include"
             }).then((res) => {
                 if (res.status === 200) {
