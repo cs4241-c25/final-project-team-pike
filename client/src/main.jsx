@@ -23,7 +23,6 @@ createRoot(document.getElementById('root')).render(
                 <Route path="/join-group" element={<JoinGroup />} />
                 <Route path="/profile-setup" element={<ProfileSetup />} />
                 <Route path="/group-selection" element={<GroupSelection />} />
-                {/* <Route path="/login" element={<Login />} /> */}
                 <Route path="/chores" element={<Chore />} />
                 <Route path="/expense-tracker" element={<ExpenseTracker />} />
                 <Route path="/grocery-tracker" element={<GroceryTracker />} />

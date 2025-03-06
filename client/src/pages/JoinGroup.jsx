@@ -53,17 +53,17 @@ export default function JoinGroup() {
             }
         })
 
-        // 🎉 Show confetti for 3 seconds
+        // 🎉🎉🎉 Show confetti for 3 seconds 🎉🎉🎉
         setShowConfetti(true);
         setTimeout(() => {
             setShowConfetti(false);
-            navigate("/dashboard"); // Redirect after confetti
+            navigate("/home"); // Redirect after confetti
         }, 3000);
     };
 
     return (
         <div className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
-            {/* 🎉 Confetti Effect */}
+            {/* 🎉 Confetti Effect 🎉 */}
             {showConfetti && <Confetti width={width} height={height}/>}
 
             {/* Enlarged SVG */}

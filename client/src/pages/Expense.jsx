@@ -12,7 +12,7 @@ export default function ExpenseTracker() {
 
     // Fetch expenses from the backend
     const fetchExpenses = useCallback(() => {
-        fetch("http://localhost:3000/api/expenses", { headers: { "x-username": "exampleUser" } })
+        fetch("http://localhost:3000/api/expenses", { credentials: "include" })
             .then((response) => response.json())
             .then((data) => {
                 console.log("Fetched expenses:", data);
@@ -36,7 +36,7 @@ export default function ExpenseTracker() {
             const newExpense = { ...form, amount: parseFloat(form.amount) };
             fetch("http://localhost:3000/api/expenses", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "x-username": "exampleUser" },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newExpense),
             })
                 .then((response) => response.json())
@@ -53,7 +53,7 @@ export default function ExpenseTracker() {
     const removeExpense = () => {
         fetch(`http://localhost:3000/api/expenses/${expenses[removeIndex].id}`, {
             method: "DELETE",
-            headers: { "x-username": "exampleUser" },
+            credentials: "include"
         })
             .then(() => {
                 console.log("Deleted expense ID:", expenses[removeIndex].id);

@@ -25,8 +25,8 @@ export default function Navbar() {
                             className="inline-block bg-gradient-to-r from-[#EC407A] via-orange-400 to-pink-400 bg-clip-text text-transparent text-lg font-bold"
                             style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
                         >
-        Choremate
-    </span>
+                            Choremate
+                        </span>
                     </Link>
 
 

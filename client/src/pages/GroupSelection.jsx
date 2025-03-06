@@ -12,10 +12,6 @@ export default function GroupSelection() {
             {/* Title: No extra spacing */}
             <img src={RoommateSVG} alt="Roommate Illustration" className="!mb-12 w-44 h-44"/>
 
-            {/*<Typography variant="h4" className="font-bold text-center pt-150px !mb-8">*/}
-            {/*    Join or Create a Roommate Group*/}
-            {/*</Typography>*/}
-
             {/* Card Container with Full Width & Centered */}
            <div className="space-y-6">
                     {/* Join Button */}

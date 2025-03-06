@@ -10,7 +10,7 @@ export default function GroceryTracker() {
 
     // ✅ Fetch groceries from backend (Runs on mount & when an item is added/removed)
     const fetchGroceries = useCallback(() => {
-        fetch("http://localhost:3000/api/groceries", { headers: { "x-username": "exampleUser" } })
+        fetch("http://localhost:3000/api/groceries", { credentials: "include" })
             .then((response) => response.json())
             .then((data) => {
                 console.log("Fetched groceries:", data);
@@ -164,5 +164,5 @@ export default function GroceryTracker() {
                     )}
                 </Box>
             </div>
-            );
-            }
+        );
+    }

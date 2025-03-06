@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { AddCircleOutline } from "@mui/icons-material";
-// import Layout from "../components/Layout";
 
 export default function ChoreApp() {
     const [chores, setChores] = useState({});
@@ -14,19 +13,6 @@ export default function ChoreApp() {
         category: "Cleaning",
         status: "Not Completed",
     });
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch("http://localhost:3000/api/woah", { credentials: "include" });
-                const data = await response.json();
-                console.log(data);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-        fetchData();
-    }, []);
 
     const handleAddChore = async () => {
         const newChoreData = {

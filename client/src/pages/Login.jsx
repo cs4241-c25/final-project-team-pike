@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { GitHub } from "@mui/icons-material";
 import { Button, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
     const fullText = "Welcome to Choremate";
     const [displayText, setDisplayText] = useState("");
     const typingSpeed = 100; // Adjust speed (in ms)
     const [user, setUser] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         let i = 0;
@@ -25,15 +27,20 @@ export default function Login() {
     // Check if user is already authenticated
     useEffect(() => {
         fetch("http://localhost:3000/api/user", { credentials: "include" })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.github) {
-                    setUser(data);
-                    window.location.href = "/chores"; // Redirect to chores page if logged in
+            .then((res) => {
+                if (res.status === 401) {
+                    setUser(null);
                 }
             })
-            .catch(() => setUser(null));
+            .then((data) => {
+                if (data && data.github) {
+                    setUser(data);
+                    navigate("/home");
+                }
+            })
+            .catch(() => setUser(null)); // Handle other errors silently without console logs
     }, []);
+    
 
     return (
         <div

@@ -11,6 +11,7 @@ export default function CreateGroup() {
 
     // Function to generate a 6-character alphanumeric code
     const generateInviteCode = () => {
+        // TODO replace with a backend query
         const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         let code = "";
         for (let i = 0; i < 6; i++) {
@@ -82,11 +83,11 @@ export default function CreateGroup() {
                 </Box>
             )}
 
-            {/* Redirect to Dashboard */}
+            {/* Redirect to Home */}
             {inviteCode && (
                 <Button
                     variant="contained"
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => navigate("/home")}
                     sx={{
                         marginTop: "20px",
                         backgroundColor: "#4CAF50 !important",
@@ -102,7 +103,7 @@ export default function CreateGroup() {
                         },
                     }}
                 >
-                    Go to Dashboard
+                    Go to Home
                 </Button>
             )}
         </div>
