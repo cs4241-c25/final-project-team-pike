@@ -22,7 +22,7 @@ export default function ProfileSetup() {
     };
 
     const handleDone = () => {
-        if (name && image) {
+        if (name) {
             navigate("/group-selection");
         }
     };
@@ -32,13 +32,10 @@ export default function ProfileSetup() {
             {/* Navbar */}
             <Navbar/>
             <h1 className="pt-[150px] text-xl font-bold mb-6">Set up your profile</h1>
-            <img src={ProfileSVG} alt="Profile Setup Illustration" className=" mb-8 w-100 h-100"/>
+            <img src={ProfileSVG} alt="Profile Setup Illustration" className="mb-8 w-100 h-100"/>
 
-
-            <div className=" w-full flex justify-center">
-                <Card
-                    className="p-10 shadow-xl w-full max-w-3xl text-center rounded-3xl border border-gray-200 bg-white">
-
+            <div className="w-full flex justify-center">
+                <Card className="p-10 shadow-xl w-full max-w-3xl text-center rounded-3xl border border-gray-200 bg-white">
                     <Box className="space-y-6 w-full">
                         {/* Name Input */}
                         <TextField
@@ -50,8 +47,7 @@ export default function ProfileSetup() {
                         />
 
                         {/* File Upload Section */}
-                        <div
-                            className="flex items-center justify-center border border-gray-300 p-4 rounded-lg cursor-pointer hover:bg-gray-100 w-full">
+                        <div className="flex items-center justify-center border border-gray-300 p-4 rounded-lg cursor-pointer hover:bg-gray-100 w-full">
                             <input
                                 type="file"
                                 accept="image/*"
@@ -63,11 +59,11 @@ export default function ProfileSetup() {
                                 <IconButton color="primary" size="small">
                                     <AttachFile fontSize="small"/>
                                 </IconButton>
-                                <Typography className="text-gray-700 text-base">Choose File</Typography>
+                                <Typography className="text-gray-700 text-base">Choose File (Optional)</Typography>
                             </label>
                         </div>
 
-                        {/* Profile Image Preview */}
+                        {/* Profile Image Preview (Optional) */}
                         {image && (
                             <img
                                 src={image}
@@ -76,13 +72,13 @@ export default function ProfileSetup() {
                             />
                         )}
 
-                        {/* Done Button */}
+                        {/* Done Button (Only requires Name) */}
                         <Button
                             variant="contained"
                             color="primary"
                             fullWidth
                             onClick={handleDone}
-                            disabled={!name || !image}
+                            disabled={!name}
                             className="py-3 text-lg rounded-xl shadow-lg hover:bg-blue-700 transition-all"
                         >
                             Done

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { useState, useEffect, useCallback } from "react";
+import { TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel, Button } from "@mui/material";
 
 export default function ExpenseTracker() {
     const [expenses, setExpenses] = useState([]);
@@ -10,29 +10,61 @@ export default function ExpenseTracker() {
     const [showRemovePrompt, setShowRemovePrompt] = useState(false);
     const [removeIndex, setRemoveIndex] = useState(null);
 
+    // Fetch expenses from the backend
+    const fetchExpenses = useCallback(() => {
+        fetch("http://localhost:3000/api/expenses", { headers: { "x-username": "exampleUser" } })
+            .then((response) => response.json())
+            .then((data) => {
+                console.log("Fetched expenses:", data);
+                setExpenses(data);
+            })
+            .catch((error) => console.error("Error fetching expenses:", error));
+    }, []);
+
+    useEffect(() => {
+        fetchExpenses();
+    }, [fetchExpenses]);
+
+    // Add an expense
     const addExpense = () => {
-        if (editIndex !== null) {className="bg-gray-300 text-red-600 px-4 py-2 rounded-lg hover:bg-gray-400 hover:scale-110 transition-all font-medium"
+        if (editIndex !== null) {
             const updatedExpenses = [...expenses];
             updatedExpenses[editIndex] = { ...form, amount: parseFloat(form.amount) };
-            setExpenses([...updatedExpenses]); // Ensure state updates
+            setExpenses([...updatedExpenses]); // Update the state
             setEditIndex(null);
         } else {
-            setExpenses([...expenses, { ...form, amount: parseFloat(form.amount) }]);
+            const newExpense = { ...form, amount: parseFloat(form.amount) };
+            fetch("http://localhost:3000/api/expenses", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "x-username": "exampleUser" },
+                body: JSON.stringify(newExpense),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    console.log("Added expense:", data);
+                    fetchExpenses();
+                    setForm({ description: "", category: "", amount: "", payer: "" }); // Reset form
+                })
+                .catch((error) => console.error("Error adding expense:", error));
         }
-        setForm({ description: "", category: "", amount: "", payer: "" });
     };
 
+    // Remove an expense
     const removeExpense = () => {
-        setExpenses(expenses.filter((_, i) => i !== removeIndex)); // Create new array
-        setShowRemovePrompt(false);
-        setRemoveIndex(null);
+        fetch(`http://localhost:3000/api/expenses/${expenses[removeIndex].id}`, {
+            method: "DELETE",
+            headers: { "x-username": "exampleUser" },
+        })
+            .then(() => {
+                console.log("Deleted expense ID:", expenses[removeIndex].id);
+                fetchExpenses();
+                setShowRemovePrompt(false);
+                setRemoveIndex(null);
+            })
+            .catch((error) => console.error("Error deleting expense:", error));
     };
 
-    const cancelRemove = () => {
-        setShowRemovePrompt(false);
-        setRemoveIndex(null);
-    };
-
+    // Add category
     const addCategory = () => {
         if (newCategory && !categories.includes(newCategory)) {
             setCategories([...categories, newCategory]);
@@ -40,11 +72,12 @@ export default function ExpenseTracker() {
         }
     };
 
+    // Edit expense
     const editExpense = (index) => {
         const expenseToEdit = expenses[index];
         setForm({
             description: expenseToEdit.description,
-            category: expenseToEdit.category || "", // Ensure category has a valid value
+            category: expenseToEdit.category || "",
             amount: expenseToEdit.amount.toString(),
             payer: expenseToEdit.payer,
         });
@@ -93,7 +126,7 @@ export default function ExpenseTracker() {
                     </Select>
                 </FormControl>
 
-                {/* MUI TextField for Amount Input with "$" prefix */}
+
                 <TextField
                     label="Amount"
                     variant="outlined"
