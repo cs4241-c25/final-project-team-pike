@@ -11,6 +11,7 @@ import ExpenseTracker from "./pages/Expense.jsx";
 import ProfileSetup from "./pages/ProfileSetup.jsx";
 import GroupSelection from "./pages/GroupSelection.jsx";
 import JoinGroup from "./pages/JoinGroup.jsx";
+import Home from "./pages/Home.jsx";
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
@@ -18,6 +19,7 @@ createRoot(document.getElementById('root')).render(
             <Navbar />
             <Routes>
                 <Route path="/" element={<Login />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/join-group" element={<JoinGroup />} />
                 <Route path="/profile-setup" element={<ProfileSetup />} />
                 <Route path="/group-selection" element={<GroupSelection />} />

@@ -7,6 +7,7 @@ const GitHubStrategy = require("passport-github2").Strategy
 const {query, body, validationResult} = require('express-validator');
 const sqlite3 = require('sqlite3')
 const { promisify } = require('util');
+const {response} = require("express");
 
 // constants
 const port = 3000
@@ -67,9 +68,9 @@ server.get("/auth/github/callback",
         // check if user exists in database
         const userRecord = dbGet("SELECT * FROM Users WHERE github = ?", req.user.username)
         if (!userRecord) {
-            res.redirect(FRONTEND+"/signup")
+            res.redirect(FRONTEND+"/profile-setup")
         }
-        res.redirect(FRONTEND+"/chores")
+        res.redirect(FRONTEND+"/home")
     }
 )
 
@@ -190,8 +191,8 @@ server.get("/api/user/tasks", ensureAuth, async (request, response) => {
 });
 
 server.get("/api/tasks/:taskID", ensureAuth, async (request, response) => {
-   const orgID = await orgLookup(request.user.username);
-   const task = await dbGet("SELECT * FROM Tasks WHERE id = ?", request.params.taskID, orgID);
+    const orgID = await orgLookup(request.user.username);
+    const task = await dbGet("SELECT * FROM Tasks WHERE id = ?", request.params.taskID, orgID);
     if (!task) {
         response.status(404).json({error: "Task not found", taskID: request.params.taskID});
         return
@@ -207,46 +208,53 @@ server.get("/api/tasks/:taskID/instances", ensureAuth, async (request, response)
     const taskID = request.params.taskID
 })
 
-// ------------------------ handle POST requests ------------------------ 
+// ------------------------ handle POST requests ------------------------
 
 // create new user (called during first login)
 server.post("/api/user/create",
+    ensureAuth,
     body("realName").isString().escape(),
-    body("github").isString().escape(),
     async (request, response) => {
-        const user = request.body
-        const existing = await dbGet("SELECT * FROM Users WHERE github = ?", user.github)
+        const name = request.body.realName
+        const github = request.user.username
+        const existing = await dbGet("SELECT * FROM Users WHERE github = ?", github)
         if (existing) {
             response.status(400).json({error: "User already exists"})
             return
         }
         try {
-            await dbRun("INSERT INTO Users (realName, github) VALUES (?, ?)", user.realName, user.github)
+            await dbRun("INSERT INTO Users (realName, github) VALUES (?, ?)", name, github)
         } catch (e) {
             response.status(500).json({error: e})
+            console.log("account create failed: "+e)
+            return
         }
         response.status(200).json({message: "user created"})
     }
 );
 
-server.post("/api/user/enroll",
+server.post("/api/org/enroll",
     ensureAuth,
-    body("orgID").isInt(),
+    body("inviteCode").isAlphanumeric().isLength(6),
     async (request, response) => {
-        const orgID = request.body.orgID
         const userRecord = await dbGet("SELECT * FROM Users WHERE github = ?", request.user.username)
         if (!userRecord) {
-            response.status(400).json({error: 'User does not exist'})
+            response.status(400).json({error: 'User does not exist!'})
             return
         }
         if (userRecord.orgID){
             response.status(400).json({error: 'User already enrolled', orgID: " + userRecord.orgID + "})
             return
         }
+        const orgID = await dbGet("SELECT id FROM Organizations WHERE inviteCode = ?", request.body.inviteCode)
+        if (!orgID){
+            response.status(400).json({error: "Invalid invite code"})
+            return
+        }
         try {
             await dbRun("UPDATE Users SET orgID = ? WHERE github = ?", orgID, request.user.username)
         } catch (e) {
-            response.status(500).json({error: " + e + "})
+            response.status(500).json({error: e })
             return
         }
         response.status(200).json({message: 'user enrolled'})
@@ -255,7 +263,6 @@ server.post("/api/user/enroll",
 server.post("/api/org/create",
     ensureAuth,
     body("name").isString().escape(),
-    body("description").isString().escape(),
     async (request, response) => {
         const org = request.body
         const existing = await dbGet("SELECT * FROM Organizations WHERE name = ?", org.name)
@@ -331,126 +338,89 @@ server.post("/api/tasks/create",
             response.status(500).json({error: e})
             return
         }
+        // todo: if schedule is set, populate downstream instances
         response.status(200).json({message: 'task created'})
     });
 
+<<<<<<< Updated upstream
 
 // ------------------------ Helper Functions ------------------------
 // ✅ Get user organization based on username
 async function orgLookup(username) {
     return await dbGet("SELECT orgID FROM Users WHERE github = ?", username);
 }
+=======
+server.post('/api/tasks/instance/assign',
+    ensureAuth,
+    body("assignee").isString().escape(),
+    body("instanceID").isNumeric(),
+    async (request, response) => {
+>>>>>>> Stashed changes
 
-// ------------------------ Grocery API Routes ------------------------
-
-// ✅ Fetch all groceries (filtered by organization)
-server.get("/api/groceries", async (req, res) => {
-    try {
-        console.log("GET /api/groceries called");
-
-        const userOrg = await orgLookup(req.headers["x-username"]);
-        if (!userOrg) {
-            return res.status(400).json({ error: "User is not in an organization" });
+        const instanceId = request.body.instanceID;
+        const userRecord = await dbGet("SELECT * FROM Users WHERE github = ?", request.body.assignee);
+        if (!userRecord) {
+            response.status(400).json({error: 'User does not exist'})
+            return
         }
-
-        const groceries = await dbAll("SELECT * FROM Inventory WHERE orgID = ?", userOrg.orgID);
-        console.log("Fetched groceries:", groceries);
-
-        res.status(200).json(groceries);
-    } catch (error) {
-        console.error("Error fetching groceries:", error);
-        res.status(500).json({ error: "Failed to fetch inventory", details: error.message });
-    }
-});
-
-// ✅ Add a new grocery item
-server.post("/api/groceries", async (req, res) => {
-    const { name, description, quantity, location, notes, listType } = req.body;
-    console.log("Received POST request:", req.body);
-
-    try {
-        const userOrg = await orgLookup(req.headers["x-username"]);
-        if (!userOrg) {
-            return res.status(400).json({ error: "User is not in an organization" });
+        const orgID = await orgLookup(request.user.username);
+        const instanceRecord = await dbGet("SELECT * FROM TaskInstances WHERE id = ?", instanceId);
+        if (!instanceRecord) {
+            response.status(400).json({error: 'Task Instance does not exist!'})
+            return
         }
-
-        if (!["inventory", "needed"].includes(listType)) {
-            return res.status(400).json({ error: "Invalid listType. Must be 'inventory' or 'needed'." });
+        const taskOrg = await dbGet("SELECT orgID FROM Tasks WHERE id=?", instanceRecord.taskID);
+        if (userRecord.orgID !== orgID || taskOrg !== orgID){
+            response.status(403).json({error: "Cross-org assignment not supported"})
         }
-
-        await dbRun(
-            "INSERT INTO Inventory (orgID, name, description, quantity, location, notes, listType) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            userOrg.orgID, name, description, quantity, location, notes, listType
-        );
-
-        const newItem = await dbGet("SELECT * FROM Inventory ORDER BY id DESC LIMIT 1");
-        console.log("New item added:", newItem);
-
-        res.status(201).json(newItem);
-    } catch (error) {
-        console.error("Error adding item:", error);
-        res.status(500).json({ error: "Failed to add item", details: error.message });
-    }
-});
-
-// ✅ Move an item from Needed to Inventory
-server.put("/api/groceries/:id", async (req, res) => {
-    const { listType } = req.body;
-    const itemId = req.params.id;
-
-    try {
-        const userOrg = await orgLookup(req.headers["x-username"]);
-        if (!userOrg) {
-            return res.status(400).json({ error: "User is not in an organization" });
+        let prevAssignee = null
+        if (instanceRecord.assigneeID) {
+            console.log("Warning: overwriting assignee for taskInstance "+ instanceId)
+            prevAssignee = instanceRecord.assigneeID
         }
+        await dbRun("UPDATE TaskInstances SET assigneeID = ? WHERE id = ?", request.body.assignee, instanceId)
+        response.status(200).json({message: 'task assigned', assignee: request.body.assignee, prevAssignee: prevAssignee})
+    })
 
-        const item = await dbGet("SELECT * FROM Inventory WHERE id = ? AND orgID = ?", itemId, userOrg.orgID);
-        if (!item) {
-            return res.status(404).json({ error: "Item not found or not in your organization" });
+server.post('/api/tasks/instance/complete',
+    ensureAuth,
+    body("instanceID").isNumeric(),
+    async (request, response) => {
+        const instanceRecord = await dbGet("SELECT * FROM TaskInstances WHERE id = ?", request.body.instanceID);
+        if (!instanceRecord) {
+            response.status(404).json({error: 'Task Instance does not exist'});
+            return;
         }
-
-        if (!["inventory", "needed"].includes(listType)) {
-            return res.status(400).json({ error: "Invalid listType. Must be 'inventory' or 'needed'." });
+        if (instanceRecord.assigneeID !== request.user.username) {
+            response.status(403).json({error: 'Not your task'})
+            return;
         }
-
-        await dbRun("UPDATE Inventory SET listType = ? WHERE id = ?", listType, itemId);
-
-        const updatedItem = await dbGet("SELECT * FROM Inventory WHERE id = ?", itemId);
-        console.log("Item moved:", updatedItem);
-
-        res.status(200).json(updatedItem);
-    } catch (error) {
-        console.error("Error moving item:", error);
-        res.status(500).json({ error: "Failed to move item", details: error.message });
-    }
-});
-
-// ✅ Delete a grocery item
-server.delete("/api/groceries/:id", async (req, res) => {
-    const itemId = req.params.id;
-
-    try {
-        const userOrg = await orgLookup(req.headers["x-username"]);
-        if (!userOrg) {
-            return res.status(400).json({ error: "User is not in an organization" });
+        let status = 'completed'
+        if ((new Date()) > (new Date(instanceRecord.dueDate))){
+            status += ' (late)'
         }
+        await dbRun("UPDATE TaskInstances SET status=? WHERE id=?", status, request.body.instanceID)
+        response.status(200)
+    })
 
-        const item = await dbGet("SELECT * FROM Inventory WHERE id = ? AND orgID = ?", itemId, userOrg.orgID);
-        if (!item) {
-            return res.status(404).json({ error: "Item not found or not in your organization" });
+server.post("/api/tasks/instance/cancel",
+    ensureAuth,
+    body("instanceID").isNumeric(),
+    async (request, response) => {
+        const record = await dbGet("SELECT * FROM TaskInstances I INNER JOIN Tasks T on I.taskID = T.id WHERE I.id = ?")
+        if (!record){
+            response.status(404).json({error: "no matching task instance!"})
+            return
         }
+        if (record.orgID !== orgLookup(request.user.username)){
+            response.status(403).json({error: "Not authorized, not your org!"})
+            return
+        }
+        await dbRun("UPDATE TaskInstances SET status = ? WHERE id=?","cancelled", request.body.instanceID);
+        response.status(200).json({status: "ok"})
 
-        await dbRun("DELETE FROM Inventory WHERE id = ?", itemId);
-        console.log("Deleted item ID:", itemId);
-
-        res.status(200).json({ message: "Item deleted successfully" });
-    } catch (error) {
-        console.error("Error deleting item:", error);
-        res.status(500).json({ error: "Failed to delete item", details: error.message });
-    }
-});
-
-// ------------------------ start server ------------------------ 
+    })
+// ------------------------ start server ------------------------
 async function startServer() {
     server.listen(process.env.PORT || port, () => {
         console.log(`Server is running on port ${port}`)

@@ -5,6 +5,8 @@ import RoommateSVG from "../assets/roommate.svg"; // Import the SVG file
 import Confetti from "react-confetti"; // 🎉 Import the confetti effect
 import { useWindowSize } from "react-use"; // Helps make confetti responsive
 
+const BACKEND = "http://localhost:3000"
+
 export default function JoinGroup() {
     const navigate = useNavigate();
     const [inviteCode, setInviteCode] = useState(["", "", "", "", "", ""]); // Now 6 characters
@@ -41,6 +43,15 @@ export default function JoinGroup() {
         }
 
         console.log("Joining with invite code:", codeString);
+        fetch(BACKEND+"/api/org/enroll", {
+            method: "POST",
+            body: JSON.stringify({inviteCode: codeString}),
+            credentials: "include",
+        }).then((res) => {
+            if (res.status !== 200) {
+                alert(res.body)
+            }
+        })
 
         // 🎉 Show confetti for 3 seconds
         setShowConfetti(true);

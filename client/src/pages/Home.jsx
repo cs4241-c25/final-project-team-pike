@@ -20,7 +20,10 @@ export default function Home() {
         return () => clearInterval(interval);
     }, []);
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     return (
         <div className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-white p-6 fixed inset-0">
             <Typography
@@ -47,4 +50,8 @@ export default function Home() {
             </Typography>
         </div>
     );
+<<<<<<< Updated upstream
 }
+=======
+}
+>>>>>>> Stashed changes

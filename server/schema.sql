@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS Organizations
 (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
-    description TEXT,
     profilePic  TEXT,
     organizerID TEXT,
     FOREIGN KEY (organizerID) REFERENCES Users (github)
