@@ -7,7 +7,7 @@ const GitHubStrategy = require("passport-github2").Strategy
 const {query, body, validationResult} = require('express-validator');
 const sqlite3 = require('sqlite3')
 const {promisify} = require('util');
-const {response} = require("express");
+const {response, request} = require("express");
 
 // constants
 const port = 3000
@@ -98,7 +98,7 @@ server.get("/logout", (req, res) => {
 // ------------------------ db helper functions ------------------------
 // lookup a user's associated organization
 async function orgLookup(username) {
-    return await dbGet("SELECT orgID FROM Users WHERE github = ?", username)
+    return (await dbGet("SELECT orgID FROM Users WHERE github = ?", username)).orgID
 }
 
 // ------------------------ handle GET requests ------------------------
@@ -134,6 +134,18 @@ server.get("/api/user/by-id/:github", ensureAuth, async (request, response) => {
         record
     });
 });
+
+server.get("/api/org/users",
+    ensureAuth,
+    async (req, res) => {
+        const myOrg = await orgLookup(req.user.username)
+        if (!myOrg){
+            res.status(401).json({error: "user not associated with an org!"})
+            return
+        }
+        const dat = await dbAll("SELECT realName FROM Users WHERE orgID = ?", myOrg);
+        res.status(200).json({users: dat})
+    })
 
 server.get("/api/org/:orgID/users", ensureAuth, async (request, response) => {
     const orgID = request.params.orgID
@@ -291,41 +303,37 @@ server.post("/api/user/enroll",
         response.status(200).json({message: 'user enrolled'})
     });
 
-server.post("/api/tasks/create",
+server.post("/api/org/create",
+    ensureAuth,
+    body("name").isString().escape(),
     async (request, response) => {
-        console.log("Received request:", request.body); // Debugging
-        try {
-            const orgID = await orgLookup(request.user.username);
-            console.log("Org ID:", orgID); // Debugging
-
-            if (!orgID) {
-                return response.status(400).json({ error: "Invalid org ID" });
-            }
-
-            const typeRow = await dbGet("SELECT * FROM TaskTypes WHERE orgID = ? AND name = ?", orgID, request.body.type);
-            console.log("Type row:", typeRow); // Debugging
-
-            if (!typeRow) {
-                return response.status(400).json({ error: "Invalid task type" });
-            }
-
-            await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?, ?)",
-                orgID, request.body.title, request.body.description, typeRow.id, request.body.schedule);
-
-            console.log("Task successfully created"); // Debugging
-            response.status(200).json({ message: "Task created" });
-
-        } catch (e) {
-            console.error("Error inserting task:", e); // Debugging
-            response.status(500).json({ error: e.message });
+        const orgName = request.body.name
+        const organizer = request.user.username
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let code = "";
+        for (let i = 0; i < 6; i++) {
+            code += characters.charAt(Math.floor(Math.random() * characters.length));
         }
+        const existing = await dbGet("SELECT * FROM Organizations WHERE name = ?", orgName)
+        if (existing) {
+            response.status(400).json({error: "Already exists", orgID: existing.id})
+            return
+        }
+        try {
+            await dbRun("INSERT INTO Organizations (name, organizerID, inviteCode) VALUES (?,?,?)", orgName, organizer, code)
+        } catch (e) {
+            response.status(500).json({error: e})
+            return
+        }
+        const orgID = await dbGet("SELECT id FROM Organizations WHERE inviteCode = ?",code);
+        await dbRun("UPDATE Users SET orgID = ? WHERE github = ?", orgID.id, organizer);
+        response.status(200).json({message: 'organization created', inviteCode: code})
     }
 );
 
 server.post("/api/tasks/create",
     ensureAuth,
     body('title').isString().escape(),
-    body('description').isString().escape(),
     body('type').isString().escape(),
     body('schedule').optional().isString(),
     async (request, response) => {
@@ -342,8 +350,8 @@ server.post("/api/tasks/create",
             return
         }
         try {
-            await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?, ?)",
-                orgID, task.title, task.description, typeRow.id, task.schedule)
+            await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?)",
+                orgID, task.title, typeRow.id, task.schedule)
         } catch (e) {
             response.status(500).json({error: e})
             return
@@ -431,6 +439,59 @@ server.post("/api/tasks/instance/cancel",
     }
 )
 
+server.post("/api/payments/add",
+    ensureAuth,
+    body('payerID').isString(),
+    body("amountPaid").isFloat(),
+    body('description').isString(),
+    async (request, response) => {
+        const issues = validationResult(request)
+        if (!issues.isEmpty()){
+            console.log(issues.array()[0].msg)
+            response.status(400).json({error: issues.array()[0].msg})
+            return
+        }
+        try {
+            await dbRun("INSERT INTO Expenses (description, payerID, amountPaid)  VALUES (?,?,?)", request.body.description, request.body.payer, request.body.amountPaid)
+        }
+        catch (e){
+            response.status(500).json({error: e})
+            console.log("Cannot add payment: "+e)
+            return
+        }
+        response.status(200).json({status: "OK"})
+    })
+
+server.get("/api/payments", ensureAuth, async(request, response) => {
+    const org = await orgLookup(request.user.username)
+    const data = await dbAll("SELECT id,description,payerID,amountPaid,paidOff FROM Expenses E JOIN Users U ON U.github = E.payerID WHERE U.orgID = ?",org)
+    response.status(200).json(data)
+})
+
+server.post("/api/payments/complete",
+    ensureAuth,
+    body("paymentIDs").isArray(),
+    async (request, response) => {
+        const valid = validationResult(request);
+        if (!valid.isEmpty()){
+            response.status(400).json({errors: valid.array()})
+            console.log("Failed to complete payment(s)")
+            return
+        }
+        const paymentIdArr = request.body.paymentIDs
+        for (let i=0; i < paymentIdArr.length; i++){
+            await dbRun("UPDATE Expenses SET paidOff = 1 WHERE id = ?", paymentIdArr[i])
+        }
+        response.code(200).json({status: "OK"})
+})
+
+server.get("/api/payments/resolve",
+    ensureAuth,
+    async (request, response) => {
+
+    })
+
+
 // ✅ Fetch all groceries (filtered by organization)
 server.get("/api/groceries", async (req, res) => {
     try {
@@ -483,12 +544,12 @@ server.post("/api/groceries", async (req, res) => {
 });
 
 // ✅ Move an item from Needed to Inventory
-server.put("/api/groceries/:id", async (req, res) => {
+server.put("/api/groceries/:id", ensureAuth, async (req, res) => {
     const {listType} = req.body;
     const itemId = req.params.id;
 
     try {
-        const userOrg = await orgLookup(req.headers["x-username"]);
+        const userOrg = await orgLookup(req.user.username);
         if (!userOrg) {
             return res.status(400).json({error: "User is not in an organization"});
         }
@@ -514,28 +575,12 @@ server.put("/api/groceries/:id", async (req, res) => {
     }
 });
 
-server.post("/api/payments/add",
-    ensureAuth,
-    body('payer').isString(),
-    body("amountPaid").isFloat(),
-    body('description').isString(),
-    async (request, response) => {
-        const issues = validationResult(request)
-        if (!issues.isEmpty()){
-            console.log(issues.mapped())
-            response.status(400).json({error: "bad request parameters"})
-            return
-        }
-        // TODO: finish this function!
-
-    })
-
 // ✅ Delete a grocery item
-server.delete("/api/groceries/:id", async (req, res) => {
+server.delete("/api/groceries/:id", ensureAuth, async (req, res) => {
     const itemId = req.params.id;
 
     try {
-        const userOrg = await orgLookup(req.headers["x-username"]);
+        const userOrg = await orgLookup(req.user.username);
         if (!userOrg) {
             return res.status(400).json({error: "User is not in an organization"});
         }
