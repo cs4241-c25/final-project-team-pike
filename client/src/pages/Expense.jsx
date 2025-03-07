@@ -7,25 +7,18 @@ export default function ExpenseTracker() {
     const [newCategory, setNewCategory] = useState("");
     const [editIndex, setEditIndex] = useState(null);
     const [expenses, setExpenses] = useState([]);
-    const [debts, setDebts] = useState([]); // List of unsettled debts
-    const [settledTransactions, setSettledTransactions] = useState([]); // List of past paid transactions
-    const [showSettledTransactions, setShowSettledTransactions] = useState(false); // Toggle for past expenses
+    const [debts, setDebts] = useState([]);
+    const [settledTransactions, setSettledTransactions] = useState([]);
+    const [showSettledTransactions, setShowSettledTransactions] = useState(false);
 
-    // Commented out API calls
-    /*
-    const fetchExpenses = useCallback(() => {
-        fetch("http://localhost:3000/api/expenses", { credentials: "include" })
-            .then((response) => response.json())
-            .then((data) => setExpenses(data))
-            .catch((error) => console.error("Error fetching expenses:", error));
-    }, []);
+    // Sample list of users, this could come from API or context
+    const users = [
+        { id: "1", name: "John Doe" },
+        { id: "2", name: "Jane Smith" },
+        { id: "3", name: "Alice Johnson" },
+    ];
 
-    useEffect(() => {
-        fetchExpenses();
-    }, [fetchExpenses]);
-    */
-
-    // Add an expense
+    // Add or Edit an Expense
     const addExpense = () => {
         const newExpense = { ...form, amount: parseFloat(form.amount) };
 
@@ -33,16 +26,30 @@ export default function ExpenseTracker() {
             const updatedExpenses = [...expenses];
             updatedExpenses[editIndex] = newExpense;
             setExpenses(updatedExpenses);
+            setDebts(updatedExpenses);
             setEditIndex(null);
         } else {
             setExpenses([...expenses, newExpense]);
-            setDebts([...debts, newExpense]); // Simultaneously add to debts table
+            setDebts([...debts, newExpense]);
         }
 
         setForm({ description: "", category: "", amount: "", payer: "" }); // Reset form
     };
 
-    // Add category
+    // Edit an Expense
+    const editExpense = (index) => {
+        setForm(debts[index]);
+        setEditIndex(index);
+    };
+
+    // Remove an Expense
+    const removeExpense = (index) => {
+        const updatedExpenses = expenses.filter((_, i) => i !== index);
+        setExpenses(updatedExpenses);
+        setDebts(updatedExpenses);
+    };
+
+    // Add Category
     const addCategory = () => {
         if (newCategory && !categories.includes(newCategory)) {
             setCategories([...categories, newCategory]);
@@ -50,25 +57,10 @@ export default function ExpenseTracker() {
         }
     };
 
-    // Remove expense (commented out API call)
-    /*
-    const removeExpense = (index) => {
-        fetch(`http://localhost:3000/api/expenses/${expenses[index].id}`, {
-            method: "DELETE",
-            credentials: "include"
-        })
-            .then(() => {
-                const updatedExpenses = expenses.filter((_, i) => i !== index);
-                setExpenses(updatedExpenses);
-            })
-            .catch((error) => console.error("Error deleting expense:", error));
-    };
-    */
-
-    // Settle all debts (currently only clearing UI)
+    // Settle all debts
     const settleAllDebts = () => {
-        setSettledTransactions([...settledTransactions, ...debts]); // Move debts to settled transactions
-        setDebts([]); // Clear unsettled debts
+        setSettledTransactions([...settledTransactions, ...debts]);
+        setDebts([]);
     };
 
     return (
@@ -125,12 +117,22 @@ export default function ExpenseTracker() {
                     }}
                 />
 
-                <input
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-black"
-                    placeholder="Payer"
-                    value={form.payer}
-                    onChange={(e) => setForm({ ...form, payer: e.target.value })}
-                />
+                <FormControl fullWidth>
+                    <InputLabel>Select Payer</InputLabel>
+                    <Select
+                        value={form.payer}
+                        onChange={(e) => setForm({ ...form, payer: e.target.value })}
+                        label="Select Payer"
+                    >
+                        <MenuItem value="">Select Payer</MenuItem>
+                        {users.map((user) => (
+                            <MenuItem key={user.id} value={user.name}>
+                                {user.name}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+
                 <button
                     className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
                     onClick={addExpense}
@@ -149,6 +151,7 @@ export default function ExpenseTracker() {
                         <th className="py-3 px-4 text-left">Category</th>
                         <th className="py-3 px-4 text-left">Amount</th>
                         <th className="py-3 px-4 text-left">Payer</th>
+                        <th className="py-3 px-4 text-left">Actions</th>
                     </tr>
                     </thead>
                     <tbody className="text-black">
@@ -158,13 +161,26 @@ export default function ExpenseTracker() {
                             <td className="py-3 px-4">{debt.category}</td>
                             <td className="py-3 px-4">${debt.amount.toFixed(2)}</td>
                             <td className="py-3 px-4">{debt.payer}</td>
+                            <td className="py-3 px-4">
+                                <button
+                                    className="px-3 py-1 bg-yellow-500 text-white rounded-lg mr-2"
+                                    onClick={() => editExpense(index)}
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    className="px-3 py-1 bg-red-500 text-white rounded-lg"
+                                    onClick={() => removeExpense(index)}
+                                >
+                                    Remove
+                                </button>
+                            </td>
                         </tr>
                     ))}
                     </tbody>
                 </table>
             </div>
 
-            {/* Settle All Debts Button */}
             <button
                 className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
                 onClick={settleAllDebts}
@@ -172,36 +188,12 @@ export default function ExpenseTracker() {
                 Settle All Debts
             </button>
 
-            {/* Toggle Button for Viewing Settled Transactions */}
             <button
                 className="mt-4 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
                 onClick={() => setShowSettledTransactions(!showSettledTransactions)}
             >
                 {showSettledTransactions ? "Hide Settled Transactions" : "View Settled Transactions"}
             </button>
-
-            {/* Settled Transactions Section */}
-            {showSettledTransactions && settledTransactions.length > 0 && (
-                <div className="w-full max-w-4xl mt-8">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Settled Transactions ✅</h2>
-                    <table className="w-full border-collapse bg-white shadow-md rounded-lg overflow-hidden">
-                        <thead>
-                        <tr className="bg-gray-200 text-black">
-                            <th className="py-3 px-4 text-left">Description</th>
-                            <th className="py-3 px-4 text-left">Amount</th>
-                        </tr>
-                        </thead>
-                        <tbody className="text-black">
-                        {settledTransactions.map((txn, index) => (
-                            <tr key={index} className="border-b hover:bg-gray-100 transition">
-                                <td className="py-3 px-4">{txn.description}</td>
-                                <td className="py-3 px-4">${txn.amount.toFixed(2)}</td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
         </div>
     );
 }
