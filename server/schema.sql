@@ -52,14 +52,8 @@ CREATE TABLE IF NOT EXISTS TaskInstances
 
 CREATE TABLE IF NOT EXISTS Inventory
 (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    orgID       INTEGER NOT NULL,
-    name        TEXT    NOT NULL,
-    description TEXT,
-    quantity    INTEGER NOT NULL,
-    location    TEXT,
-    notes       TEXT,
-    FOREIGN KEY (orgID) REFERENCES Organizations (id)
+    name     TEXT    NOT NULL,
+    quantity INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Expenses

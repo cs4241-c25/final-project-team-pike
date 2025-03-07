@@ -424,47 +424,33 @@ server.post("/api/tasks/instance/cancel",
 
     }
 )
-
-// ✅ Fetch all groceries (filtered by organization)
+// ✅ Fetch all groceries
 server.get("/api/groceries", async (req, res) => {
     try {
         console.log("GET /api/groceries called");
 
-        const userOrg = await orgLookup(req.headers["x-username"]);
-        if (!userOrg) {
-            return res.status(400).json({error: "User is not in an organization"});
-        }
-
-        const groceries = await dbAll("SELECT * FROM Inventory WHERE orgID = ?", userOrg.orgID);
+        const groceries = await dbAll("SELECT * FROM Inventory");
         console.log("Fetched groceries:", groceries);
 
         res.status(200).json(groceries);
     } catch (error) {
         console.error("Error fetching groceries:", error);
-        res.status(500).json({error: "Failed to fetch inventory", details: error.message});
+        res.status(500).json({ error: "Failed to fetch inventory", details: error.message });
     }
 });
 
-
 // ✅ Add a new grocery item
 server.post("/api/groceries", async (req, res) => {
-    const {name, description, quantity, location, notes, listType} = req.body;
+    const { name, quantity } = req.body;
+
     console.log("Received POST request:", req.body);
 
+    if (!name || quantity === undefined) {
+        return res.status(400).json({ error: "Name and quantity are required" });
+    }
+
     try {
-        const userOrg = await orgLookup(req.headers["x-username"]);
-        if (!userOrg) {
-            return res.status(400).json({error: "User is not in an organization"});
-        }
-
-        if (!["inventory", "needed"].includes(listType)) {
-            return res.status(400).json({error: "Invalid listType. Must be 'inventory' or 'needed'."});
-        }
-
-        await dbRun(
-            "INSERT INTO Inventory (orgID, name, description, quantity, location, notes, listType) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            userOrg.orgID, name, description, quantity, location, notes, listType
-        );
+        await dbRun("INSERT INTO Inventory (name, quantity) VALUES (?, ?)", name, quantity);
 
         const newItem = await dbGet("SELECT * FROM Inventory ORDER BY id DESC LIMIT 1");
         console.log("New item added:", newItem);
@@ -472,41 +458,30 @@ server.post("/api/groceries", async (req, res) => {
         res.status(201).json(newItem);
     } catch (error) {
         console.error("Error adding item:", error);
-        res.status(500).json({error: "Failed to add item", details: error.message});
+        res.status(500).json({ error: "Failed to add item", details: error.message });
     }
 });
 
-// ✅ Move an item from Needed to Inventory
-server.put("/api/groceries/:id", async (req, res) => {
-    const {listType} = req.body;
+// ✅ Delete a grocery item
+server.delete("/api/groceries/:id", async (req, res) => {
     const itemId = req.params.id;
 
     try {
-        const userOrg = await orgLookup(req.headers["x-username"]);
-        if (!userOrg) {
-            return res.status(400).json({error: "User is not in an organization"});
-        }
-
-        const item = await dbGet("SELECT * FROM Inventory WHERE id = ? AND orgID = ?", itemId, userOrg.orgID);
+        const item = await dbGet("SELECT * FROM Inventory WHERE id = ?", itemId);
         if (!item) {
-            return res.status(404).json({error: "Item not found or not in your organization"});
+            return res.status(404).json({ error: "Item not found" });
         }
 
-        if (!["inventory", "needed"].includes(listType)) {
-            return res.status(400).json({error: "Invalid listType. Must be 'inventory' or 'needed'."});
-        }
+        await dbRun("DELETE FROM Inventory WHERE id = ?", itemId);
+        console.log("Deleted item ID:", itemId);
 
-        await dbRun("UPDATE Inventory SET listType = ? WHERE id = ?", listType, itemId);
-
-        const updatedItem = await dbGet("SELECT * FROM Inventory WHERE id = ?", itemId);
-        console.log("Item moved:", updatedItem);
-
-        res.status(200).json(updatedItem);
+        res.status(200).json({ message: "Item deleted successfully" });
     } catch (error) {
-        console.error("Error moving item:", error);
-        res.status(500).json({error: "Failed to move item", details: error.message});
+        console.error("Error deleting item:", error);
+        res.status(500).json({ error: "Failed to delete item", details: error.message });
     }
 });
+
 
 server.post("/api/payments/add",
     ensureAuth,
@@ -524,30 +499,7 @@ server.post("/api/payments/add",
 
     })
 
-// ✅ Delete a grocery item
-server.delete("/api/groceries/:id", async (req, res) => {
-    const itemId = req.params.id;
 
-    try {
-        const userOrg = await orgLookup(req.headers["x-username"]);
-        if (!userOrg) {
-            return res.status(400).json({error: "User is not in an organization"});
-        }
-
-        const item = await dbGet("SELECT * FROM Inventory WHERE id = ? AND orgID = ?", itemId, userOrg.orgID);
-        if (!item) {
-            return res.status(404).json({error: "Item not found or not in your organization"});
-        }
-
-        await dbRun("DELETE FROM Inventory WHERE id = ?", itemId);
-        console.log("Deleted item ID:", itemId);
-
-        res.status(200).json({message: "Item deleted successfully"});
-    } catch (error) {
-        console.error("Error deleting item:", error);
-        res.status(500).json({error: "Failed to delete item", details: error.message});
-    }
-});
 
 // ------------------------ start server ------------------------
 async function startServer() {
