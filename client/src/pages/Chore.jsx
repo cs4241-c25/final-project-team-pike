@@ -7,6 +7,7 @@ export default function ChoreApp() {
     const [categories] = useState(["Cleaning", "Kitchen", "Trash", "Others"]);
     const [selectedCategory, setSelectedCategory] = useState("Cleaning");
     const [showForm, setShowForm] = useState(false);
+    const [triggerUseEffect, setTriggerUseEffect] = useState(false);
     const [newChore, setNewChore] = useState({
         name: "",
         deadline: "",
@@ -35,7 +36,7 @@ export default function ChoreApp() {
         };
 
         fetchChores();
-    }, [selectedCategory]);
+    }, [selectedCategory, triggerUseEffect]);
 
     const deleteTask = async (taskID) => {
         try {
@@ -50,6 +51,7 @@ export default function ChoreApp() {
             if (response.ok){
                 console.log("deleted")
             }
+            setTriggerUseEffect(!triggerUseEffect)
         }
         catch (e){
             console.log(e)
@@ -251,7 +253,8 @@ export default function ChoreApp() {
                                             className="px-4 py-2 rounded-lg bg-gray-300 text-white hover:bg-gray-400 transition font-medium"
                                             onClick={() => deleteTask(chore.id)}
                                         >
-                                            Delete
+                                            Delete 🗑️
+
                                         </button>
                                     </div>
                                 </div>
