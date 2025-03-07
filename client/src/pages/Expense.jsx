@@ -1,66 +1,120 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel, Button } from "@mui/material";
 
 export default function ExpenseTracker() {
-    const [categories, setCategories] = useState([]);
-    const [form, setForm] = useState({ description: "", category: "", amount: "", payer: "" });
-    const [newCategory, setNewCategory] = useState("");
-    const [editIndex, setEditIndex] = useState(null);
-    const [expenses, setExpenses] = useState([]);
-    const [debts, setDebts] = useState([]);
-    const [settledTransactions, setSettledTransactions] = useState([]);
-    const [showSettledTransactions, setShowSettledTransactions] = useState(false);
+    const [form, setForm] = useState({ description: "", amountPaid: "", payer: "" });
+    const [orgUsers, setOrgUsers] = useState([]);
+    const [currentExpenses, setCurrentExpenses] = useState([]);
+    const [pastExpenses, setPastExpenses] = useState([]);
+    const [paymentResolutions, setPaymentResolutions] = useState([]);
 
-    // Sample list of users, this could come from API or context
-    const users = [
-        { id: "1", name: "John Doe" },
-        { id: "2", name: "Jane Smith" },
-        { id: "3", name: "Alice Johnson" },
-    ];
-
-    // Add or Edit an Expense
-    const addExpense = () => {
-        const newExpense = { ...form, amount: parseFloat(form.amount) };
-
-        if (editIndex !== null) {
-            const updatedExpenses = [...expenses];
-            updatedExpenses[editIndex] = newExpense;
-            setExpenses(updatedExpenses);
-            setDebts(updatedExpenses);
-            setEditIndex(null);
-        } else {
-            setExpenses([...expenses, newExpense]);
-            setDebts([...debts, newExpense]);
+    const fetchOrgUsers = async () => {
+        try {
+            const response = await fetch("http://localhost:3000/api/org/users", { credentials: "include" });
+            const data = await response.json();
+            setOrgUsers(data.users);
+        } catch (error) {
+            console.error("Error org users:", error);
         }
+    }
 
-        setForm({ description: "", category: "", amount: "", payer: "" }); // Reset form
-    };
-
-    // Edit an Expense
-    const editExpense = (index) => {
-        setForm(debts[index]);
-        setEditIndex(index);
-    };
-
-    // Remove an Expense
-    const removeExpense = (index) => {
-        const updatedExpenses = expenses.filter((_, i) => i !== index);
-        setExpenses(updatedExpenses);
-        setDebts(updatedExpenses);
-    };
-
-    // Add Category
-    const addCategory = () => {
-        if (newCategory && !categories.includes(newCategory)) {
-            setCategories([...categories, newCategory]);
-            setNewCategory("");
+    const fetchExpenses = async () => {
+        try {
+            const response = await fetch("http://localhost:3000/api/payments", { credentials: "include" });
+            const data = await response.json();
+            setCurrentExpenses(data.filter(expense => !expense.paidOff));
+            setPastExpenses(data.filter(expense => expense.paidOff));
+        } catch (error) {
+            console.error("Error fetching expenses:", error);
         }
     };
 
-    // Settle all debts
-    const settleAllDebts = () => {
-        setSettledTransactions([...settledTransactions, ...debts]);
-        setDebts([]);
+    const fetchPaymentResolutions = async () => {
+        try {
+            const response = await fetch("http://localhost:3000/api/payments/resolve", { credentials: "include" });
+            const resolvedData = await response.json();
+            setPaymentResolutions(resolvedData);
+        } catch (error) {
+            console.error("Error fetching payment resolutions:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchOrgUsers();
+        fetchExpenses();
+        fetchPaymentResolutions();
+    }, []);
+
+    const addExpense = async () => {
+        const newExpense = { ...form, amountPaid: parseFloat(form.amountPaid) };
+        
+        try {
+            const response = await fetch("http://localhost:3000/api/payments/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    payerName: form.payer,
+                    amountPaid: newExpense.amountPaid,
+                    description: newExpense.description,
+                }),
+                credentials: "include",
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Error adding expense:", errorData.error);
+            }
+            fetchExpenses();
+            fetchPaymentResolutions();
+        } catch (error) {
+            console.error("Error adding expense:", error);
+        }
+
+        setForm({ description: "", amountPaid: "", payer: "" });
+    };
+
+    const removeExpense = async (index) => {
+        const expenseToRemove = currentExpenses[index];
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/payments/delete/${expenseToRemove.id}`, {
+                method: "DELETE",
+                credentials: "include",
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Error removing expense:", errorData.error);
+            }
+
+            fetchExpenses();
+            fetchPaymentResolutions();
+        } catch (error) {
+            console.error("Error removing expense:", error);
+        }
+    };
+
+    const resolvePayments = async () => {
+        try {
+            const paymentIDs = currentExpenses.map((e) => e.id);
+            const response = await fetch("http://localhost:3000/api/payments/complete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ paymentIDs }),
+                credentials: "include"
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Error settling debts:", errorData.errors);
+                return;
+            }
+
+            fetchExpenses()
+        } catch (error) {
+            console.error("Error settling debts:", error);
+        }
     };
 
     return (
@@ -75,48 +129,17 @@ export default function ExpenseTracker() {
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                 />
-                <div className="flex gap-2">
-                    <input
-                        className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-black"
-                        placeholder="New Category"
-                        value={newCategory}
-                        onChange={(e) => setNewCategory(e.target.value)}
-                    />
-                    <button
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                        onClick={addCategory}
-                    >
-                        Add Category
-                    </button>
-                </div>
-                <FormControl fullWidth>
-                    <InputLabel>Select Category</InputLabel>
-                    <Select
-                        value={form.category}
-                        onChange={(e) => setForm({ ...form, category: e.target.value })}
-                        label="Select Category"
-                    >
-                        <MenuItem value="">Select Category</MenuItem>
-                        {categories.map((category, index) => (
-                            <MenuItem key={index} value={category}>
-                                {category}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-
                 <TextField
                     label="Amount"
                     variant="outlined"
                     fullWidth
                     type="number"
-                    value={form.amount}
-                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                    value={form.amountPaid}
+                    onChange={(e) => setForm({ ...form, amountPaid: e.target.value })}
                     InputProps={{
                         startAdornment: <InputAdornment position="start">$</InputAdornment>,
                     }}
                 />
-
                 <FormControl fullWidth>
                     <InputLabel>Select Payer</InputLabel>
                     <Select
@@ -125,75 +148,108 @@ export default function ExpenseTracker() {
                         label="Select Payer"
                     >
                         <MenuItem value="">Select Payer</MenuItem>
-                        {users.map((user) => (
-                            <MenuItem key={user.id} value={user.name}>
-                                {user.name}
+                        {orgUsers.map((user, index) => ( 
+                            <MenuItem key={index} value={user}>
+                                {user}
                             </MenuItem>
                         ))}
                     </Select>
+                    <button
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        onClick={addExpense}
+                    >
+                        Add Expense
+                    </button>
                 </FormControl>
-
-                <button
-                    className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                    onClick={addExpense}
-                >
-                    {editIndex !== null ? "Save Expense" : "Add Expense"}
-                </button>
             </div>
 
-            {/* Debts That Need to Be Settled */}
-            <div className="w-full max-w-4xl mt-8">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-4"> Settle These! 💳</h2>
-                <table className="w-full border-collapse bg-white shadow-md rounded-lg overflow-hidden">
-                    <thead>
-                    <tr className="bg-gray-200 text-black">
-                        <th className="py-3 px-4 text-left">Description</th>
-                        <th className="py-3 px-4 text-left">Category</th>
-                        <th className="py-3 px-4 text-left">Amount</th>
-                        <th className="py-3 px-4 text-left">Payer</th>
-                        <th className="py-3 px-4 text-left">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody className="text-black">
-                    {debts.map((debt, index) => (
-                        <tr key={index} className="border-b hover:bg-gray-100 transition">
-                            <td className="py-3 px-4">{debt.description}</td>
-                            <td className="py-3 px-4">{debt.category}</td>
-                            <td className="py-3 px-4">${debt.amount.toFixed(2)}</td>
-                            <td className="py-3 px-4">{debt.payer}</td>
-                            <td className="py-3 px-4">
-                                <button
-                                    className="px-3 py-1 bg-yellow-500 text-white rounded-lg mr-2"
-                                    onClick={() => editExpense(index)}
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    className="px-3 py-1 bg-red-500 text-white rounded-lg"
-                                    onClick={() => removeExpense(index)}
-                                >
-                                    Remove
-                                </button>
-                            </td>
+            <div className="w-full max-w-4xl mt-8 flex justify-between gap-8">
+                {/* Settle These Table */}
+                <div className="w-full">
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4"> Settle These! 💳</h2>
+                    <table className="w-full border-collapse bg-white shadow-md rounded-lg overflow-hidden">
+                        <thead>
+                        <tr className="bg-gray-200 text-black">
+                            <th className="py-3 px-4 text-left">Description</th>
+                            <th className="py-3 px-4 text-left">Amount</th>
+                            <th className="py-3 px-4 text-left">Payer</th>
+                            <th className="py-3 px-4 text-left">Modify</th>
                         </tr>
-                    ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="text-black">
+                        {currentExpenses.map((e, index) => (
+                            <tr key={index} className="border-b hover:bg-gray-100 transition">
+                                <td className="py-3 px-4">{e.description}</td>
+                                <td className="py-3 px-4">{`$${e.amountPaid.toFixed(2)}`}</td>
+                                <td className="py-3 px-4">{e.realName}</td>
+                                <td className="py-3 px-4 flex gap-2">
+                                    <button
+                                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                                        onClick={() => removeExpense(index)}
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                    <div className="flex justify-center mt-4">
+                        <button
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                            onClick={resolvePayments}
+                        >
+                            Resolve Your Payments
+                        </button>
+                    </div>
+                </div>
+
+                {/* Payment Resolutions Table */}
+                <div className="w-full">
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Who owes who</h2>
+                    <table className="w-full border-collapse bg-white shadow-md rounded-lg overflow-hidden">
+                        <thead>
+                        <tr className="bg-gray-200 text-black">
+                            <th className="py-3 px-4 text-left">From</th>
+                            <th className="py-3 px-4 text-left">To</th>
+                            <th className="py-3 px-4 text-left">Amount</th>
+                        </tr>
+                        </thead>
+                        <tbody className="text-black">
+                        {paymentResolutions.map((transaction, index) => (
+                            <tr key={index} className="border-b hover:bg-gray-100 transition">
+                                <td className="py-3 px-4">{transaction.from}</td>
+                                <td className="py-3 px-4">{transaction.to}</td>
+                                <td className="py-3 px-4">${transaction.amount}</td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <button
-                className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-                onClick={settleAllDebts}
-            >
-                Settle All Debts
-            </button>
-
-            <button
-                className="mt-4 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-                onClick={() => setShowSettledTransactions(!showSettledTransactions)}
-            >
-                {showSettledTransactions ? "Hide Settled Transactions" : "View Settled Transactions"}
-            </button>
+            {/* Past Expenses Table */}
+            {<div className="w-full max-w-4xl mt-8">
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Past Expenses</h2>
+                    <table className="w-full border-collapse bg-white shadow-md rounded-lg overflow-hidden">
+                        <thead>
+                        <tr className="bg-gray-200 text-black">
+                            <th className="py-3 px-4 text-left">Description</th>
+                            <th className="py-3 px-4 text-left">Amount</th>
+                            <th className="py-3 px-4 text-left">Payer</th>
+                        </tr>
+                        </thead>
+                        <tbody className="text-black">
+                        {pastExpenses.map((expense, index) => (
+                            <tr key={index} className="border-b hover:bg-gray-100 transition">
+                                <td className="py-3 px-4">{expense.description}</td>
+                                <td className="py-3 px-4">${expense.amountPaid}</td>
+                                <td className="py-3 px-4">{expense.realName}</td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>}
         </div>
     );
 }

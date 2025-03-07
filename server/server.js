@@ -139,10 +139,10 @@ server.get("/api/org/users",
             res.status(401).json({error: "user not associated with an org!"})
             return
         }
-        const dat = await dbAll("SELECT realName FROM Users WHERE orgID = ?", myOrg);
+        const dat = await dbAll("SELECT github, realName FROM Users WHERE orgID = ?", myOrg);
         const userList = []
         dat.forEach(row => {
-            userList.push(row.realName)
+            userList.push(row.realName) 
         })
         res.status(200).json({users: userList})
     })
@@ -419,7 +419,7 @@ server.post("/api/tasks/instance/cancel",
 
 server.post("/api/payments/add",
     ensureAuth,
-    body('payerID').isString(),
+    body('payerName').isString(),
     body("amountPaid").isFloat(),
     body('description').isString(),
     async (request, response) => {
@@ -430,7 +430,9 @@ server.post("/api/payments/add",
             return
         }
         try {
-            await dbRun("INSERT INTO Expenses (description, payerID, amountPaid)  VALUES (?,?,?)", request.body.description, request.body.payer, request.body.amountPaid)
+            const org = await orgLookup(request.user.username)
+            const payer = await dbGet("SELECT github FROM Users WHERE orgID=? AND realName=?",org,request.body.payerName)
+            await dbRun("INSERT INTO Expenses (description, payerID, amountPaid)  VALUES (?,?,?)", request.body.description, payer.github, request.body.amountPaid)
         }
         catch (e){
             response.status(500).json({error: e})
@@ -438,11 +440,31 @@ server.post("/api/payments/add",
             return
         }
         response.status(200).json({status: "OK"})
-    })
+    }
+)
+
+server.delete("/api/payments/delete/:id", async (req, res) => {
+    const id = req.params.id;
+
+    try {
+        const paymentEntry = await dbGet("SELECT * FROM Expenses WHERE id = ?", id);
+        if (!paymentEntry) {
+            return res.status(404).json({ error: "Item not found" });
+        }
+
+        await dbRun("DELETE FROM Expenses WHERE id = ?", id);
+        console.log("Deleted item ID:", id);
+
+        res.status(200).json({ message: "Item deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting item:", error);
+        res.status(500).json({ error: "Failed to delete item", details: error.message });
+    }
+});
 
 server.get("/api/payments", ensureAuth, async(request, response) => {
     const org = await orgLookup(request.user.username)
-    const data = await dbAll("SELECT id,description,payerID,amountPaid,paidOff FROM Expenses E JOIN Users U ON U.github = E.payerID WHERE U.orgID = ?",org)
+    const data = await dbAll("SELECT id,description,payerID,realName,amountPaid,paidOff FROM Expenses E JOIN Users U ON U.github = E.payerID WHERE U.orgID = ?",org)
     response.status(200).json(data)
 })
 
@@ -460,7 +482,7 @@ server.post("/api/payments/complete",
         for (let i=0; i < paymentIdArr.length; i++){
             await dbRun("UPDATE Expenses SET paidOff = 1 WHERE id = ?", paymentIdArr[i])
         }
-        response.code(200).json({status: "OK"})
+        response.status(200).json({status: "OK"})
 })
 
 server.get("/api/payments/resolve",
@@ -469,9 +491,9 @@ server.get("/api/payments/resolve",
         const myOrg = orgLookup(request.user.username)
         const userData = await dbAll("SELECT realName FROM Users WHERE orgID = ?",myOrg);
         const paymentData = await dbAll("SELECT E.payerID, E.amountPaid FROM Expenses E JOIN Users U ON E.payerID = U.github WHERE U.orgID = ? AND E.paidOff = 0", myOrg)
-        if (!userList || !paymentData){
+        if (!userData || !paymentData){
             console.log("DB returned bad vals! exit.")
-            response.code(500).json({error: "failed"});
+            response.status(500).json({error: "failed"});
             return
         }
         // prepare data for algs
@@ -487,7 +509,8 @@ server.get("/api/payments/resolve",
             }
             payOut.push(tmp)
         })
-        const resolutions = settleDebts(userList, payOut);
+        // const resolutions = settleDebts(userList, payOut);
+        const resolutions = [{from: "me", to: "you", amount: 123}, {from: "suki", to: "jake", amount: 321}]
         response.status(200).json(resolutions)
     })
 

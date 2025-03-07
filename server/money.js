@@ -7,7 +7,7 @@
  * @param {Array<String>} allNames the list of everyone living in the apartment splitting costs equally
  * @param {Array<Object>} allPayments a list of jsons containing { spender: __, value: __ } for every payment made
  */
-export default function settleDebts(allNames, allPayments) {
+function settleDebts(allNames, allPayments) {
     // step 0: init data structures
     const N = allNames.length
     let debtMatrix = [] // debtMatrix[personA][personB] is the amt A owes B
@@ -139,3 +139,5 @@ const EPS = 1e-5
 function gt(float1, float2) { return float1 - float2 > EPS }
 function lt(float1, float2) { return float1 - float2 < -EPS }
 function eq(float1, float2) { return float1 - float2 < EPS }
+
+module.exports = settleDebts
