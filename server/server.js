@@ -325,6 +325,8 @@ server.post("/api/org/create",
             response.status(500).json({error: e})
             return
         }
+        const orgID = await dbGet("SELECT id FROM Organizations WHERE inviteCode = ?",code);
+        await dbRun("UPDATE Users SET orgID = ? WHERE github = ?", orgID.id, organizer);
         response.status(200).json({message: 'organization created', inviteCode: code})
     }
 );
@@ -464,6 +466,23 @@ server.get("/api/payments", ensureAuth, async(request, response) => {
     const org = await orgLookup(request.user.username)
     const data = await dbAll("SELECT id,description,payerID,amountPaid,paidOff FROM Expenses E JOIN Users U ON U.github = E.payerID WHERE U.orgID = ?",org)
     response.status(200).json(data)
+})
+
+server.post("/api/payments/complete",
+    ensureAuth,
+    body("paymentIDs").isArray(),
+    async (request, response) => {
+        const valid = validationResult(request);
+        if (!valid.isEmpty()){
+            response.status(400).json({errors: valid.array()})
+            console.log("Failed to complete payment(s)")
+            return
+        }
+        const paymentIdArr = request.body.paymentIDs
+        for (let i=0; i < paymentIdArr.length; i++){
+            await dbRun("UPDATE Expenses SET paidOff = 1 WHERE id = ?", paymentIdArr[i])
+        }
+        response.code(200).json({status: "OK"})
 })
 
 // ✅ Fetch all groceries (filtered by organization)
