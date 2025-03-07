@@ -145,26 +145,31 @@ server.get("/api/org/:orgID/users", ensureAuth, async (request, response) => {
         })
         return
     }
-    let isMember = false
-    let out = []
-    for (let i = 0; i < users.length; i++) {
-        if (users[i].github === request.user.username) {
-            isMember = true
-        }
-        out.push("{realName: " + users[i].realName + ", github: " + users[i].github + "}")
-    }
-    if (!isMember) {
+    const myRec = await dbGet("SELECT github FROM Users WHERE github = ? AND orgID = ?",request.user.username, orgID)
+    if (!myRec) {
         response.status(403).json({error: "Requesting user not a member of organization", orgID: orgID})
         return
     }
 
-    response.status(200).json(out);
+    response.status(200).json(users);
 });
+
+server.get('/api/org/inviteCode',
+    ensureAuth,
+    async (request, response) => {
+        const dat = await dbGet("SELECT inviteCode FROM Organizations O JOIN Users U ON U.orgID = O.id WHERE U.github = ?", request.user.username)
+        if (!dat) {
+            response.status(404).json({error: "Organization not found"})
+            return
+        }
+        response.status(200).json({invite: dat.inviteCode})
+    })
 
 server.get('/api/org/inviteInfo',
     ensureAuth,
     query("code").escape().isAlphanumeric().isLength(6),
     async (request, response) => {
+
         sanitizationRes = validationResult(request);
         if (!sanitizationRes.isEmpty()) {
             console.log("invite code validator fail: " + sanitizationRes.array())
@@ -297,7 +302,7 @@ server.post("/api/org/create",
         for (let i = 0; i < 6; i++) {
             code += characters.charAt(Math.floor(Math.random() * characters.length));
         }
-        const existing = await dbGet("SELECT * FROM Organizations WHERE name = ?", org.name)
+        const existing = await dbGet("SELECT * FROM Organizations WHERE name = ?", orgName)
         if (existing) {
             response.status(400).json({error: "Already exists", orgID: existing.id})
             return
@@ -308,8 +313,7 @@ server.post("/api/org/create",
             response.status(500).json({error: e})
             return
         }
-        response.status(200).json({message: 'organization created',
-        inviteCode: code})
+        response.status(200).json({message: 'organization created', inviteCode: code})
     }
 );
 
@@ -503,6 +507,22 @@ server.put("/api/groceries/:id", async (req, res) => {
         res.status(500).json({error: "Failed to move item", details: error.message});
     }
 });
+
+server.post("/api/payments/add",
+    ensureAuth,
+    body('payer').isString(),
+    body("amountPaid").isFloat(),
+    body('description').isString(),
+    async (request, response) => {
+        const issues = validationResult(request)
+        if (!issues.isEmpty()){
+            console.log(issues.mapped())
+            response.status(400).json({error: "bad request parameters"})
+            return
+        }
+        // TODO: finish this function!
+
+    })
 
 // ✅ Delete a grocery item
 server.delete("/api/groceries/:id", async (req, res) => {

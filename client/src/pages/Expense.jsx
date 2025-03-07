@@ -2,13 +2,15 @@ import { useState, useEffect, useCallback } from "react";
 import { TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel, Button } from "@mui/material";
 
 export default function ExpenseTracker() {
-    const [expenses, setExpenses] = useState([]);
     const [categories, setCategories] = useState([]);
     const [form, setForm] = useState({ description: "", category: "", amount: "", payer: "" });
     const [newCategory, setNewCategory] = useState("");
     const [editIndex, setEditIndex] = useState(null);
     const [showRemovePrompt, setShowRemovePrompt] = useState(false);
     const [removeIndex, setRemoveIndex] = useState(null);
+    const [expenses, setExpenses] = useState([]);
+    const [settledTransactions, setSettledTransactions] = useState([]); // Stores settled payments
+
 
     // Fetch expenses from the backend
     const fetchExpenses = useCallback(() => {
@@ -82,6 +84,35 @@ export default function ExpenseTracker() {
             payer: expenseToEdit.payer,
         });
         setEditIndex(index);
+    };
+
+    // Fetch settled transactions
+    const fetchSettledTransactions = useCallback(() => {
+        fetch("http://localhost:3000/api/settlements", { credentials: "include" })
+            .then((response) => response.json())
+            .then((data) => setSettledTransactions(data))
+            .catch((error) => console.error("Error fetching settlements:", error));
+    }, []);
+
+    useEffect(() => {
+        fetchExpenses();
+        fetchSettledTransactions();
+    }, [fetchExpenses, fetchSettledTransactions]);
+
+    // Settle all debts
+    const settleAllDebts = () => {
+        fetch("http://localhost:3000/api/settle", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                console.log("Settled transactions:", data);
+                fetchExpenses(); // Refresh expenses
+                fetchSettledTransactions(); // Refresh settled transactions
+            })
+            .catch((error) => console.error("Error settling debts:", error));
     };
 
     return (
@@ -194,6 +225,38 @@ export default function ExpenseTracker() {
                     </tbody>
                 </table>
             </div>
+            {/* Settle All Debts Button */}
+            <button
+                className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                onClick={settleAllDebts}
+            >
+                Settle All Debts
+            </button>
+
+            {/* Settled Transactions Section */}
+            {settledTransactions.length > 0 && (
+                <div className="w-full max-w-4xl mt-8">
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Settled Transactions ✅</h2>
+                    <table className="w-full border-collapse bg-white shadow-md rounded-lg overflow-hidden">
+                        <thead>
+                        <tr className="bg-gray-200 text-black">
+                            <th className="py-3 px-4 text-left">From</th>
+                            <th className="py-3 px-4 text-left">To</th>
+                            <th className="py-3 px-4 text-left">Amount</th>
+                        </tr>
+                        </thead>
+                        <tbody className="text-black">
+                        {settledTransactions.map((txn, index) => (
+                            <tr key={index} className="border-b hover:bg-gray-100 transition">
+                                <td className="py-3 px-4">{txn.from}</td>
+                                <td className="py-3 px-4">{txn.to}</td>
+                                <td className="py-3 px-4">${txn.amount.toFixed(2)}</td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     );
 }

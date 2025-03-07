@@ -7,24 +7,41 @@ export default function CreateGroup() {
     const [groupName, setGroupName] = useState("");
     const [inviteCode, setInviteCode] = useState(null);
     const [copied, setCopied] = useState(false);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    // Function to generate a 6-character alphanumeric code
-    const generateInviteCode = () => {
-        // TODO replace with a backend query
-        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        let code = "";
-        for (let i = 0; i < 6; i++) {
-            code += characters.charAt(Math.floor(Math.random() * characters.length));
+    // Function to generate an invite code from the backend
+    const generateInviteCode = async () => {
+        setError(null); // Clear previous errors
+        try {
+            const response = await fetch("http://localhost:3000/api/org/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ name: groupName }),
+                credentials: "include"
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to generate invite code");
+            }
+
+            setInviteCode(data.inviteCode); // Expecting the backend to return the generated invite code
+            setCopied(false); // Reset copied state
+        } catch (err) {
+            setError(err.message);
         }
-        setInviteCode(code);
-        setCopied(false); // Reset copied state
     };
 
     // Function to copy invite code to clipboard
     const copyToClipboard = () => {
-        navigator.clipboard.writeText(inviteCode);
-        setCopied(true);
+        if (inviteCode) {
+            navigator.clipboard.writeText(inviteCode);
+            setCopied(true);
+        }
     };
 
     return (
@@ -69,6 +86,13 @@ export default function CreateGroup() {
             >
                 Generate Invite Code
             </Button>
+
+            {/* Display Error Message */}
+            {error && (
+                <Typography color="error" variant="body2" className="mt-2">
+                    {error}
+                </Typography>
+            )}
 
             {/* Display Invite Code with Copy Functionality */}
             {inviteCode && (
