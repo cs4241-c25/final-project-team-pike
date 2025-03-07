@@ -45,6 +45,7 @@ export default function GroceryTracker() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(newItem),
+                credentials: "include"
             });
             if (!response.ok) throw new Error("Failed to add item");
             const addedItem = await response.json();
@@ -60,6 +61,7 @@ export default function GroceryTracker() {
         try {
             const response = await fetch(`${API_URL}/${id}`, {
                 method: "DELETE",
+                credentials: "include"
             });
             if (!response.ok) throw new Error("Failed to delete item");
             setGroceries(groceries.filter((item) => item.id !== id));
