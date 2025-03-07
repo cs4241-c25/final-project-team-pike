@@ -154,6 +154,17 @@ server.get("/api/org/:orgID/users", ensureAuth, async (request, response) => {
     response.status(200).json(users);
 });
 
+server.get('/api/org/inviteCode',
+    ensureAuth,
+    async (request, response) => {
+        const dat = await dbGet("SELECT inviteCode FROM Organizations O JOIN Users U ON U.orgID = O.id WHERE U.github = ?", request.user.username)
+        if (!dat) {
+            response.status(404).json({error: "Organization not found"})
+            return
+        }
+        response.status(200).json({invite: dat.inviteCode})
+    })
+
 server.get('/api/org/inviteInfo',
     ensureAuth,
     query("code").escape().isAlphanumeric().isLength(6),
@@ -290,7 +301,7 @@ server.post("/api/org/create",
         for (let i = 0; i < 6; i++) {
             code += characters.charAt(Math.floor(Math.random() * characters.length));
         }
-        const existing = await dbGet("SELECT * FROM Organizations WHERE name = ?", org.name)
+        const existing = await dbGet("SELECT * FROM Organizations WHERE name = ?", orgName)
         if (existing) {
             response.status(400).json({error: "Already exists", orgID: existing.id})
             return
