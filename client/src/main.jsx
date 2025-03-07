@@ -12,6 +12,7 @@ import ProfileSetup from "./pages/ProfileSetup.jsx";
 import GroupSelection from "./pages/GroupSelection.jsx";
 import JoinGroup from "./pages/JoinGroup.jsx";
 import Home from "./pages/Home.jsx";
+import CreateGroup from "./pages/CreateGroup.jsx";
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
@@ -26,6 +27,7 @@ createRoot(document.getElementById('root')).render(
                 <Route path="/chores" element={<Chore />} />
                 <Route path="/expense-tracker" element={<ExpenseTracker />} />
                 <Route path="/grocery-tracker" element={<GroceryTracker />} />
+                <Route path="/create-group" element={<CreateGroup />} />
             </Routes>
         </BrowserRouter>
     </StrictMode>,
