@@ -6,20 +6,12 @@ export default function ExpenseTracker() {
     const [form, setForm] = useState({ description: "", category: "", amount: "", payer: "" });
     const [newCategory, setNewCategory] = useState("");
     const [editIndex, setEditIndex] = useState(null);
-    const [showRemovePrompt, setShowRemovePrompt] = useState(false);
-    const [removeIndex, setRemoveIndex] = useState(null);
     const [expenses, setExpenses] = useState([]);
-    const [settledTransactions, setSettledTransactions] = useState([]); // Stores settled payments
 
-
-    // Fetch expenses from the backend
     const fetchExpenses = useCallback(() => {
         fetch("http://localhost:3000/api/expenses", { credentials: "include" })
             .then((response) => response.json())
-            .then((data) => {
-                console.log("Fetched expenses:", data);
-                setExpenses(data);
-            })
+            .then((data) => setExpenses(data))
             .catch((error) => console.error("Error fetching expenses:", error));
     }, []);
 
@@ -27,12 +19,11 @@ export default function ExpenseTracker() {
         fetchExpenses();
     }, [fetchExpenses]);
 
-    // Add an expense
     const addExpense = () => {
         if (editIndex !== null) {
             const updatedExpenses = [...expenses];
             updatedExpenses[editIndex] = { ...form, amount: parseFloat(form.amount) };
-            setExpenses([...updatedExpenses]); // Update the state
+            setExpenses([...updatedExpenses]);
             setEditIndex(null);
         } else {
             const newExpense = { ...form, amount: parseFloat(form.amount) };
@@ -41,107 +32,47 @@ export default function ExpenseTracker() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newExpense),
             })
-                .then((response) => response.json())
-                .then((data) => {
-                    console.log("Added expense:", data);
+                .then(() => {
                     fetchExpenses();
-                    setForm({ description: "", category: "", amount: "", payer: "" }); // Reset form
+                    setForm({ description: "", category: "", amount: "", payer: "" });
                 })
                 .catch((error) => console.error("Error adding expense:", error));
         }
     };
 
-    // Remove an expense
-    const removeExpense = () => {
-        fetch(`http://localhost:3000/api/expenses/${expenses[removeIndex].id}`, {
-            method: "DELETE",
-            credentials: "include"
-        })
-            .then(() => {
-                console.log("Deleted expense ID:", expenses[removeIndex].id);
-                fetchExpenses();
-                setShowRemovePrompt(false);
-                setRemoveIndex(null);
-            })
-            .catch((error) => console.error("Error deleting expense:", error));
-    };
-
-    // Add category
-    const addCategory = () => {
-        if (newCategory && !categories.includes(newCategory)) {
-            setCategories([...categories, newCategory]);
-            setNewCategory("");
-        }
-    };
-
-    // Edit expense
-    const editExpense = (index) => {
-        const expenseToEdit = expenses[index];
-        setForm({
-            description: expenseToEdit.description,
-            category: expenseToEdit.category || "",
-            amount: expenseToEdit.amount.toString(),
-            payer: expenseToEdit.payer,
-        });
-        setEditIndex(index);
-    };
-
-    // Fetch settled transactions
-    const fetchSettledTransactions = useCallback(() => {
-        fetch("http://localhost:3000/api/settlements", { credentials: "include" })
-            .then((response) => response.json())
-            .then((data) => setSettledTransactions(data))
-            .catch((error) => console.error("Error fetching settlements:", error));
-    }, []);
-
-    useEffect(() => {
-        fetchExpenses();
-        fetchSettledTransactions();
-    }, [fetchExpenses, fetchSettledTransactions]);
-
-    // Settle all debts
-    const settleAllDebts = () => {
-        fetch("http://localhost:3000/api/settle", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                console.log("Settled transactions:", data);
-                fetchExpenses(); // Refresh expenses
-                fetchSettledTransactions(); // Refresh settled transactions
-            })
-            .catch((error) => console.error("Error settling debts:", error));
-    };
-
     return (
         <div className="w-screen min-h-screen bg-white flex flex-col items-center px-4 py-8 pt-[150px]">
-            <h1 className="text-4xl font-bold text-gray-800 mb-6">Expense Tracker 💰</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">Expense Tracker 💰</h1>
 
             {/* Expense Form */}
-            <div className="w-full max-w-4xl bg-white shadow-md rounded-lg p-6 flex flex-col gap-4">
-                <input
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-black"
-                    placeholder="Description"
+            <div className="w-full max-w-7xl bg-white shadow-md rounded-lg p-6 flex flex-col md:flex-row md:flex-wrap md:gap-4">
+                <TextField
+                    className="w-full md:flex-1"
+                    label="Description"
+                    variant="outlined"
+                    fullWidth
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                 />
-                <div className="flex gap-2">
-                    <input
-                        className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-black"
-                        placeholder="New Category"
+
+                <div className="flex flex-col md:flex-row md:w-full gap-2">
+                    <TextField
+                        className="flex-1"
+                        label="New Category"
+                        variant="outlined"
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value)}
                     />
-                    <button
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                        onClick={addCategory}
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setCategories([...categories, newCategory])}
                     >
                         Add Category
-                    </button>
+                    </Button>
                 </div>
-                <FormControl fullWidth>
+
+                <FormControl className="w-full md:flex-1">
                     <InputLabel>Select Category</InputLabel>
                     <Select
                         value={form.category}
@@ -157,8 +88,8 @@ export default function ExpenseTracker() {
                     </Select>
                 </FormControl>
 
-
                 <TextField
+                    className="w-full md:flex-1"
                     label="Amount"
                     variant="outlined"
                     fullWidth
@@ -170,23 +101,29 @@ export default function ExpenseTracker() {
                     }}
                 />
 
-                <input
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-black"
-                    placeholder="Payer"
+                <TextField
+                    className="w-full md:flex-1"
+                    label="Payer"
+                    variant="outlined"
+                    fullWidth
                     value={form.payer}
                     onChange={(e) => setForm({ ...form, payer: e.target.value })}
                 />
-                <button
-                    className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+
+                <Button
+                    variant="contained"
+                    color="success"
+                    fullWidth
+                    className="md:w-1/3"
                     onClick={addExpense}
                 >
                     {editIndex !== null ? "Save Expense" : "Add Expense"}
-                </button>
+                </Button>
             </div>
 
-            {/* Expenses Table */}
-            <div className="w-full max-w-4xl mt-8">
-                <table className="w-full border-collapse bg-white shadow-md rounded-lg overflow-hidden">
+            {/* Expenses Table (Scrollable on Mobile) */}
+            <div className="w-full max-w-7xl mt-8 overflow-x-auto">
+                <table className="w-full border-collapse bg-white shadow-md rounded-lg">
                     <thead>
                     <tr className="bg-gray-200 text-black">
                         <th className="py-3 px-4 text-left">Description</th>
@@ -199,64 +136,36 @@ export default function ExpenseTracker() {
                     <tbody className="text-black">
                     {expenses.map((expense, index) => (
                         <tr key={index} className="border-b hover:bg-gray-100 transition">
-                            <td className="py-3 px-4 text-black">{expense.description}</td>
-                            <td className="py-3 px-4 text-black">{expense.category}</td>
-                            <td className="py-3 px-4 text-black">${expense.amount.toFixed(2)}</td>
-                            <td className="py-3 px-4 text-black">{expense.payer}</td>
-                            <td className="py-3 px-4 flex gap-2">
-                                <button
-                                    className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                                    onClick={() => editExpense(index)}
+                            <td className="py-3 px-4">{expense.description}</td>
+                            <td className="py-3 px-4">{expense.category}</td>
+                            <td className="py-3 px-4">${expense.amount.toFixed(2)}</td>
+                            <td className="py-3 px-4">{expense.payer}</td>
+                            <td className="py-3 px-4 flex flex-wrap gap-2">
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    size="small"
+                                    onClick={() => setEditIndex(index)}
                                 >
                                     Edit
-                                </button>
-                                <button
-                                    className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="error"
+                                    size="small"
                                     onClick={() => {
                                         setRemoveIndex(index);
                                         setShowRemovePrompt(true);
                                     }}
                                 >
                                     Remove
-                                </button>
+                                </Button>
                             </td>
                         </tr>
                     ))}
                     </tbody>
                 </table>
             </div>
-            {/* Settle All Debts Button */}
-            <button
-                className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-                onClick={settleAllDebts}
-            >
-                Settle All Debts
-            </button>
-
-            {/* Settled Transactions Section */}
-            {settledTransactions.length > 0 && (
-                <div className="w-full max-w-4xl mt-8">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Settled Transactions ✅</h2>
-                    <table className="w-full border-collapse bg-white shadow-md rounded-lg overflow-hidden">
-                        <thead>
-                        <tr className="bg-gray-200 text-black">
-                            <th className="py-3 px-4 text-left">From</th>
-                            <th className="py-3 px-4 text-left">To</th>
-                            <th className="py-3 px-4 text-left">Amount</th>
-                        </tr>
-                        </thead>
-                        <tbody className="text-black">
-                        {settledTransactions.map((txn, index) => (
-                            <tr key={index} className="border-b hover:bg-gray-100 transition">
-                                <td className="py-3 px-4">{txn.from}</td>
-                                <td className="py-3 px-4">{txn.to}</td>
-                                <td className="py-3 px-4">${txn.amount.toFixed(2)}</td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
         </div>
     );
 }
