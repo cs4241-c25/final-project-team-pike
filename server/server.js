@@ -295,7 +295,7 @@ server.post("/api/user/enroll",
             return
         }
         try {
-            await dbRun("UPDATE Users SET orgID = ? WHERE github = ?", orgID, request.user.username)
+            await dbRun("UPDATE Users SET orgID = ? WHERE github = ?", orgID.id, request.user.username)
         } catch (e) {
             response.status(500).json({error: e})
             return

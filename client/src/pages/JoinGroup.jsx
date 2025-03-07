@@ -49,7 +49,7 @@ export default function JoinGroup() {
         }
 
         console.log("Joining with invite code:", codeString);
-        fetch(BACKEND+"/api/org/enroll", {
+        fetch(BACKEND+"/api/user/enroll", {
             headers: { "Content-Type": "application/json" },
             method: "POST",
             body: JSON.stringify({inviteCode: codeString}),
