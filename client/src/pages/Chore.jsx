@@ -211,13 +211,15 @@ export default function ChoreApp() {
                                 disablePortal
                                 options={people}
                                 fullWidth
+                                onChange={(event, newValue) => {
+                                    setNewChore({ ...newChore, assignee: newValue });
+                                }}
                                 renderInput={(params) => <TextField
                                     {...params}
                                     label="Assign To"
                                     variant="outlined"
                                     fullWidth
                                     value={newChore.assignee}
-                                    onChange={(e) => setNewChore({ ...newChore, assignee: e.target.value })}
                                     className="!mb-5"
                                 />}
                             />
@@ -258,7 +260,7 @@ export default function ChoreApp() {
                                     <div>
                                         <p className="font-bold text-lg text-black">{chore.name}</p>
                                         <p className="text-sm text-gray-500">Assigned to: {chore.assigneeID}</p>
-                                        <p className="text-sm text-gray-500">Due: {chore.dueDate}</p>
+                                        <p className="text-sm text-gray-500">Due: {new Date(chore.dueDate).toLocaleDateString()}</p>
                                         <p
                                             className={`text-sm font-bold ${
                                                 chore.status === "Done" ? "text-green-600" : "text-red-600"

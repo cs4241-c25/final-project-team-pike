@@ -72,7 +72,6 @@ export default function Navbar() {
 
                     {/* Center - Navigation Links */}
                     <Box className="hidden md:flex space-x-6 mx-auto">
-                        <Button component={Link} to="/profile-setup" sx={{ color: "black", "&:hover": { color: "#ec4899" } }}>Profile</Button>
                         <Button component={Link} to="/chores" sx={{ color: "black", "&:hover": { color: "#ec4899" } }}>Chores</Button>
                         <Button component={Link} to="/expense-tracker" sx={{ color: "black", "&:hover": { color: "#ec4899" } }}>Expenses</Button>
                         <Button component={Link} to="/grocery-tracker" sx={{ color: "black", "&:hover": { color: "#ec4899" } }}>Groceries</Button>

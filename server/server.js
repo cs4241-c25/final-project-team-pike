@@ -488,8 +488,8 @@ server.post("/api/payments/complete",
 server.get("/api/payments/resolve",
     ensureAuth,
     async (request, response) => {
-        const myOrg = orgLookup(request.user.username)
-        const userData = await dbAll("SELECT realName FROM Users WHERE orgID = ?",myOrg);
+        const myOrg = await orgLookup(request.user.username)
+        const userData = await dbAll("SELECT github, realName FROM Users WHERE orgID = ?",myOrg);
         const paymentData = await dbAll("SELECT E.payerID, E.amountPaid FROM Expenses E JOIN Users U ON E.payerID = U.github WHERE U.orgID = ? AND E.paidOff = 0", myOrg)
         if (!userData || !paymentData){
             console.log("DB returned bad vals! exit.")
@@ -500,7 +500,7 @@ server.get("/api/payments/resolve",
         let userList = []
         let payOut = []
         userData.forEach(row=>{
-            userList.push(row.realName)
+            userList.push(row.github)
         })
         paymentData.forEach(row=>{
             const tmp = {
@@ -509,8 +509,15 @@ server.get("/api/payments/resolve",
             }
             payOut.push(tmp)
         })
-        // const resolutions = settleDebts(userList, payOut);
-        const resolutions = [{from: "me", to: "you", amount: 123}, {from: "suki", to: "jake", amount: 321}]
+        let nameMap = new Map();
+        userData.forEach(row =>{
+            nameMap.set(row.github, row.realName)
+        })
+        const resolutions = settleDebts(userList, payOut);
+        for (let i=0; i<resolutions.length; i++){
+            resolutions[i].from = nameMap.get(resolutions[i].from)
+            resolutions[i].to = nameMap.get(resolutions[i].to)
+        }
         response.status(200).json(resolutions)
     })
 

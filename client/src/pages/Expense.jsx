@@ -112,6 +112,7 @@ export default function ExpenseTracker() {
             }
 
             fetchExpenses()
+            fetchPaymentResolutions()
         } catch (error) {
             console.error("Error settling debts:", error);
         }
@@ -220,7 +221,7 @@ export default function ExpenseTracker() {
                             <tr key={index} className="border-b hover:bg-gray-100 transition">
                                 <td className="py-3 px-4">{transaction.from}</td>
                                 <td className="py-3 px-4">{transaction.to}</td>
-                                <td className="py-3 px-4">${transaction.amount}</td>
+                                <td className="py-3 px-4">${transaction.amount.toFixed(2)}</td>
                             </tr>
                         ))}
                         </tbody>
