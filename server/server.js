@@ -8,6 +8,7 @@ const {query, body, validationResult} = require('express-validator');
 const sqlite3 = require('sqlite3')
 const {promisify} = require('util');
 const {response, request} = require("express");
+const settleDebts = require("./money");
 
 // constants
 const port = 3000
@@ -488,7 +489,29 @@ server.post("/api/payments/complete",
 server.get("/api/payments/resolve",
     ensureAuth,
     async (request, response) => {
-
+        const myOrg = orgLookup(request.user.username)
+        const userData = await dbAll("SELECT realName FROM Users WHERE orgID = ?",myOrg);
+        const paymentData = await dbAll("SELECT E.payerID, E.amountPaid FROM Expenses E JOIN Users U ON E.payerID = U.github WHERE U.orgID = ? AND E.paidOff = 0", myOrg)
+        if (!userList || !paymentData){
+            console.log("DB returned bad vals! exit.")
+            response.code(500).json({error: "failed"});
+            return
+        }
+        // prepare data for algs
+        let userList = []
+        let payOut = []
+        userData.forEach(row=>{
+            userList.push(row.realName)
+        })
+        paymentData.forEach(row=>{
+            const tmp = {
+                spender: row.payerID,
+                 value: row.amountPaid
+            }
+            payOut.push(tmp)
+        })
+        const resolutions = settleDebts(userList, payOut);
+        response.status(200).json(resolutions)
     })
 
 
