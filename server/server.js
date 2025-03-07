@@ -326,7 +326,7 @@ server.post("/api/tasks/create",
     ensureAuth,
     body('title').isString().escape(),
     body('type').isString().escape(),
-    body('duedate').optional().isString(),
+    body('schedule').optional().isString(),
     body("assignee").isString(),
     async (request, response) => {
         const validationErrs = validationResult(request);
@@ -340,8 +340,17 @@ server.post("/api/tasks/create",
             return
         }
         const orgID = orgLookup(request.user.username);
-        await dbRun("INSERT INTO Tasks (taskType, name, orgID, dueDate, assigneeID, status) VALUES (?,?,?,?,?)",
-            request.body.type, request.body.title, orgID, request.body.duedate, request.body.assignee, "Pending");
+        try {
+            await dbRun("INSERT INTO Tasks (taskType, name, orgID, dueDate, assigneeID, status) VALUES (?,?,?,?,?,?)",
+                request.body.type, request.body.title, orgID, request.body.duedate, assigneeID.github, "Pending");
+        }
+        catch (e){
+            console.log("Couldn't create task!: "+e)
+            response.status(500).json({error: e})
+            return
+        }
+        response.status(200).json({status: 'ok'})
+
     }
 );
 
