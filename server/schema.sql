@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS Expenses
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     description TEXT NOT NULL,
     payerID     TEXT,
-    amountPayed REAL NOT NULL,
-    payedOff    INTEGER DEFAULT 0,
+    amountPaid REAL NOT NULL,
+    paidOff    INTEGER DEFAULT 0,
     FOREIGN KEY (payerID) REFERENCES Users (github)
 );

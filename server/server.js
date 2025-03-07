@@ -158,9 +158,9 @@ server.get('/api/org/inviteInfo',
     ensureAuth,
     query("code").escape().isAlphanumeric().isLength(6),
     async (request, response) => {
-        sanitizationRes = validationResult(request);
+        let sanitizationRes = validationResult(request);
         if (!sanitizationRes.isEmpty()) {
-            console.log("invite code validator fail: " + sanitizationRes.array())
+            console.log("invite code validator fail: " + sanitizationRes.mapped())
             response.status(400).json({error: sanitizationRes.array()[0]})
             return
         }
@@ -498,7 +498,19 @@ server.put("/api/groceries/:id", async (req, res) => {
 
 server.post("/api/payments/add",
     ensureAuth,
-    body(''))
+    body('payer').isString(),
+    body("amountPaid").isFloat(),
+    body('description').isString(),
+    async (request, response) => {
+        const issues = validationResult(request)
+        if (!issues.isEmpty()){
+            console.log(issues.mapped())
+            response.status(400).json({error: "bad request parameters"})
+            return
+        }
+        // TODO: finish this function!
+
+    })
 
 // ✅ Delete a grocery item
 server.delete("/api/groceries/:id", async (req, res) => {
