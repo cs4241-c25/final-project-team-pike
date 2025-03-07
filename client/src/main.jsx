@@ -1,10 +1,11 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import { UserProvider } from "./context/UserContext.jsx";
 
-import './index.css'
-import Login from './pages/Login'
+import './index.css';
+import Login from './pages/Login';
 import Chore from "./pages/Chore.jsx";
 import GroceryTracker from "./pages/Grocery.jsx";
 import ExpenseTracker from "./pages/Expense.jsx";
@@ -16,6 +17,7 @@ import CreateGroup from "./pages/CreateGroup.jsx";
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
+        <UserProvider>
         <BrowserRouter>
             <Navbar />
             <Routes>
@@ -30,5 +32,6 @@ createRoot(document.getElementById('root')).render(
                 <Route path="/create-group" element={<CreateGroup />} />
             </Routes>
         </BrowserRouter>
+        </UserProvider>
     </StrictMode>,
 )

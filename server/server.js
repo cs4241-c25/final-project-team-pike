@@ -242,7 +242,8 @@ server.post("/api/user/create",
     async (request, response) => {
         const res = validationResult(request);
         if (!res.isEmpty()) {
-            response.status(400).json({error: "Invalid username"})
+            console.log("didnt like username because "+res.array()[0].msg)
+            response.status(400).json({error: res.array()[0].msg})
             return
         }
         const name = request.body.name
