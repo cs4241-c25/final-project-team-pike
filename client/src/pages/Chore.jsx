@@ -15,14 +15,15 @@ export default function TaskApp() {
         status: "Not Completed",
     });
     const [users, setUsers] = useState([]);
-    const [taskTypes, setTaskTypes] = useState([]);
     const [loading, setLoading] = useState(true);  // Add loading state
-
+    const taskTypes = ["Cleaning", "Kitchen", "Trash", "Others"]
     // Fetch users from API
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await fetch("https://localhost:3000/api/org/users");
+                const response = await fetch("http://localhost:3000/api/org/users", {
+                    credentials: "include"
+                });
                 if (!response.ok) {
                     throw new Error("Failed to fetch users");
                 }
@@ -36,23 +37,7 @@ export default function TaskApp() {
                 setLoading(false);  // Set loading to false after fetching
             }
         };
-
-        const fetchTaskTypes = async () => {
-            try {
-                const response = await fetch("https://localhost:3000/api/org/tasktypes");
-                if (!response.ok) {
-                    throw new Error("Failed to fetch task types");
-                }
-                const taskTypesData = await response.json();
-                setTaskTypes(taskTypesData);  // Assuming taskTypesData is an array of task type objects
-            } catch (error) {
-                console.error(error);
-                alert("Error fetching task types");
-            }
-        };
-
-        fetchUsers();
-        fetchTaskTypes();
+        fetchUsers().then();
     }, []);
 
     const handleAddTask = async () => {

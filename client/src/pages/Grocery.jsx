@@ -17,6 +17,7 @@ export default function GroceryTracker() {
                     headers: {
                         "Content-Type": "application/json",
                     },
+                    credentials: "include"
                 });
                 if (!response.ok) throw new Error("Failed to fetch groceries");
                 const data = await response.json();
