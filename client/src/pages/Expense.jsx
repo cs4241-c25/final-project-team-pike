@@ -157,7 +157,6 @@ export default function ExpenseTracker() {
                     </Select>
                 </FormControl>
 
-
                 <TextField
                     label="Amount"
                     variant="outlined"
