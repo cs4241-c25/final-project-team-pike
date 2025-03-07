@@ -8,8 +8,6 @@
  * @param {Array<Object>} allPayments a list of jsons containing { spender: __, value: __ } for every payment made
  */
 function settleDebts(allNames, allPayments) {
-    console.log(allNames)
-    console.log(allPayments)
     // step 0: init data structures
     const N = allNames.length
     let debtMatrix = [] // debtMatrix[personA][personB] is the amt A owes B
@@ -143,5 +141,3 @@ function lt(float1, float2) { return float1 - float2 < -EPS }
 function eq(float1, float2) { return float1 - float2 < EPS }
 
 module.exports = settleDebts
-
-console.log(settleDebts(["Jake", "Slut"], [{spender: "Jake", value: 10}, {spender: "Slut", value: 5}]))

@@ -50,6 +50,7 @@ export default function Navbar() {
 
             setUserInfo({name: name, initials: initials, inviteCode: code})
         }
+        window.dispatchEvent(new Event("storage")); // this is dumb i love it
         window.addEventListener("storage", updatePersonalInfo)
     }, []);
     
