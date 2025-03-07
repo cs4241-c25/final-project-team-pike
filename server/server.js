@@ -218,6 +218,15 @@ server.get("/api/user/tasks", ensureAuth, async (request, response) => {
     response.status(200).json(myTasks);
 });
 
+server.get("/api/tasks/by-category/:category",
+    ensureAuth,
+    async(req,res)=> {
+        const cat = req.params.category
+        const orgID = await orgLookup(req.user.username)
+        const tasks = await dbAll("SELECT name, assigneeID, status, dueDate FROM Tasks WHERE orgID=? AND taskType=?",orgID,cat)
+        res.status(200).json(tasks)
+    })
+
 server.get("/api/tasks/:taskID", ensureAuth, async (request, response) => {
     const orgID = await orgLookup(request.user.username);
     const task = await dbGet("SELECT * FROM Tasks WHERE id = ?", request.params.taskID, orgID);
