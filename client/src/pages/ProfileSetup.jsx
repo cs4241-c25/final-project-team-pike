@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Button, Card, TextField, Typography, Avatar, Box, Alert, Snackbar } from "@mui/material";
+import { Button, Card, TextField, Avatar, Box, Alert, Snackbar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import ProfileSVG from "../assets/profile.svg";
+import { useUser } from "../context/UserContext"; // ✅ Import UserContext
 
 const BACKEND = "http://localhost:3000";
 
@@ -10,9 +11,20 @@ export default function ProfileSetup() {
     const [name, setName] = useState("");
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
+    const { updateUser } = useUser(); // ✅ Get updateUser function from UserContext
 
     const handleDone = () => {
         if (name.trim()) {
+            // ✅ Extract initials (First & Last name)
+            const nameParts = name.trim().split(" ");
+            const initials = nameParts.length > 1
+                ? `${nameParts[0][0].toUpperCase()}${nameParts[1][0].toUpperCase()}`
+                : nameParts[0][0].toUpperCase();
+
+            // ✅ Update UserContext
+            updateUser({ name, initials });
+
+            // ✅ Send data to backend
             fetch(BACKEND + "/api/user/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -39,8 +51,6 @@ export default function ProfileSetup() {
             handleDone();
         }
     };
-
-
 
     return (
         <div className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">

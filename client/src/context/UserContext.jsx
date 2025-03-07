@@ -10,13 +10,8 @@ export function UserProvider({ children }) {
         initials: "",
     });
 
-    // Function to update user info
-    const updateUser = (name) => {
-        const nameParts = name.split(" ");
-        const initials = nameParts.length > 1
-            ? nameParts[0][0].toUpperCase() + nameParts[1][0].toUpperCase()
-            : nameParts[0][0].toUpperCase();
-
+    // ✅ Accept both `name` & `initials` (Instead of computing initials inside)
+    const updateUser = ({ name, initials }) => {
         setUser({ name, initials });
     };
 
