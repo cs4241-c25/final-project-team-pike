@@ -15,6 +15,60 @@ export default function ChoreApp() {
         status: "Not Completed",
     });
 
+    // Fetch chores from API when selectedCategory changes
+    useEffect(() => {
+        const fetchChores = async () => {
+            try {
+                const response = await fetch(`http://localhost:3000/api/tasks/by-category/${selectedCategory}`, {
+                    method: "GET",
+                    credentials: "include",
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setChores((prev) => ({ ...prev, [selectedCategory]: data }));
+                } else {
+                    console.error("Error fetching chores:", response.statusText);
+                }
+            } catch (error) {
+                console.error("Error fetching chores:", error);
+            }
+        };
+
+        fetchChores();
+    }, [selectedCategory]);
+
+    // Update task status in the database
+    const updateStatus = async (taskID, newStatus) => {
+        try {
+            const response = await fetch("http://localhost:3000/api/tasks/complete", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ taskID: taskID }),
+                credentials: "include",
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (newStatus === "Done") {
+                    setChores((prev) => ({
+                        ...prev,
+                        [selectedCategory]: prev[selectedCategory].map((chore) =>
+                            chore.id === taskID ? { ...chore, status: data.status } : chore
+                        ),
+                    }));
+                }
+            } else {
+                const data = await response.json();
+                alert(`Error: ${data.error || "An error occurred while updating the status"}`);
+            }
+        } catch (error) {
+            console.error("Error while updating status:", error);
+            alert("An unexpected error occurred.");
+        }
+    };
+
     const handleAddChore = async () => {
         const newChoreData = {
             title: newChore.name,
@@ -34,16 +88,21 @@ export default function ChoreApp() {
                 credentials: "include",
             });
 
-            const data = await response.json();
-
             if (response.ok) {
-                setChores((prev) => ({
-                    ...prev,
-                    [newChore.category]: [...(prev[newChore.category] || []), newChore],
-                }));
-                setShowForm(false);
                 setNewChore({ name: "", deadline: "", assignee: "", category: "Cleaning", status: "Not Completed" });
+                setShowForm(false);
+
+                // Re-fetch tasks after adding a new one
+                const fetchUpdatedChores = await fetch(`http://localhost:3000/api/tasks/by-category/${newChore.category}`, {
+                    method: "GET",
+                    credentials: "include",
+                });
+                if (fetchUpdatedChores.ok) {
+                    const updatedData = await fetchUpdatedChores.json();
+                    setChores((prev) => ({ ...prev, [newChore.category]: updatedData }));
+                }
             } else {
+                const data = await response.json();
                 alert(`Error: ${data.error || "An error occurred while adding the chore"}`);
             }
         } catch (error) {
@@ -54,9 +113,7 @@ export default function ChoreApp() {
 
     return (
         <div className="w-screen min-h-screen bg-white flex flex-col items-center justify-start pt-[150px]">
-            {/* Main Content */}
             <div className="flex w-full max-w-5xl gap-6">
-                {/* Sidebar */}
                 <aside className="w-1/4 p-6 border-r border-gray-300">
                     <h2 className="text-xl font-bold mb-6 !text-black">Categories</h2>
                     <div className="space-y-3">
@@ -65,10 +122,9 @@ export default function ChoreApp() {
                                 key={category}
                                 onClick={() => setSelectedCategory(category)}
                                 className={`w-full py-3 px-5 text-left text-black rounded-lg transition font-medium transform duration-200 ease-in-out 
-                                        ${
-                                    selectedCategory === category
-                                        ? "bg-pink-500 text-white scale-105"
-                                        : "bg-gray-300 text-white hover:bg-pink-400 hover:text-white hover:scale-105"
+                                        ${selectedCategory === category
+                                    ? "bg-pink-500 text-white scale-105"
+                                    : "bg-gray-300 text-white hover:bg-pink-400 hover:text-white hover:scale-105"
                                 }`}
                             >
                                 {category}
@@ -83,16 +139,13 @@ export default function ChoreApp() {
                     </button>
                 </aside>
 
-                {/* Chores List */}
                 <section className="w-3/4 p-6">
                     <h2 className="text-3xl font-bold mb-6 text-black">{selectedCategory} Chores</h2>
 
-                    {/* Inline Chore Form - Appears When "Add Chore" is Clicked */}
                     {showForm && (
                         <div className="text-black bg-white p-6 rounded-lg shadow-md border mb-6">
                             <h2 className="text-2xl font-bold mb-4 text-pink-400">Add a Chore</h2>
 
-                            {/* MUI TextField for Task Name */}
                             <TextField
                                 label="Task Name"
                                 variant="outlined"
@@ -102,7 +155,6 @@ export default function ChoreApp() {
                                 className="!mb-5"
                             />
 
-                            {/* MUI TextField for Deadline */}
                             <TextField
                                 label="Deadline"
                                 type="datetime-local"
@@ -114,7 +166,6 @@ export default function ChoreApp() {
                                 className="!mb-5"
                             />
 
-                            {/* MUI TextField for Assignee */}
                             <TextField
                                 label="Assign To"
                                 variant="outlined"
@@ -124,7 +175,6 @@ export default function ChoreApp() {
                                 className="!mb-5"
                             />
 
-                            {/* MUI Select for Categories */}
                             <FormControl fullWidth variant="outlined" className="!mb-5">
                                 <InputLabel>Category</InputLabel>
                                 <Select
@@ -141,25 +191,16 @@ export default function ChoreApp() {
                             </FormControl>
 
                             <div className="flex justify-end gap-3">
-                                <Button
-                                    variant="outlined"
-                                    color="!red"
-                                    onClick={() => setShowForm(false)}
-                                >
+                                <Button variant="outlined" color="!red" onClick={() => setShowForm(false)}>
                                     Cancel
                                 </Button>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={handleAddChore}
-                                >
+                                <Button variant="contained" color="primary" onClick={handleAddChore}>
                                     Save
                                 </Button>
                             </div>
                         </div>
                     )}
 
-                    {/* List of Chores */}
                     {chores[selectedCategory]?.length > 0 ? (
                         <div className="space-y-4">
                             {chores[selectedCategory].map((chore, index) => (
@@ -170,7 +211,7 @@ export default function ChoreApp() {
                                     <div>
                                         <p className="font-bold text-lg text-black">{chore.name}</p>
                                         <p className="text-sm text-gray-500">Assigned to: {chore.assignee}</p>
-                                        <p className="text-sm text-gray-500">Due: {chore.deadline}</p>
+                                        <p className="text-sm text-gray-500">Due: {chore.dueDate}</p>
                                         <p
                                             className={`text-sm font-bold ${
                                                 chore.status === "Done" ? "text-green-600" : "text-red-600"
@@ -179,16 +220,17 @@ export default function ChoreApp() {
                                             Status: {chore.status}
                                         </p>
                                     </div>
+
                                     <div className="flex gap-3">
                                         <button
                                             className="px-4 py-2 rounded-lg bg-pink-400 text-white hover:bg-pink-500 transition font-medium"
-                                            onClick={() => updateStatus(selectedCategory, index, "Done")}
+                                            onClick={() => updateStatus(chore.id, "Done")}
                                         >
                                             Done
                                         </button>
                                         <button
                                             className="px-4 py-2 rounded-lg bg-gray-300 text-white hover:bg-gray-400 transition font-medium"
-                                            onClick={() => updateStatus(selectedCategory, index, "Not Completed")}
+                                            onClick={() => updateStatus(chore.id, "Not Completed")}
                                         >
                                             Not Completed
                                         </button>
