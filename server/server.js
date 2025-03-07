@@ -223,7 +223,7 @@ server.get("/api/tasks/by-category/:category",
     async(req,res)=> {
         const cat = req.params.category
         const orgID = await orgLookup(req.user.username)
-        const tasks = await dbAll("SELECT name, assigneeID, status, dueDate FROM Tasks WHERE orgID=? AND taskType=?",orgID,cat)
+        const tasks = await dbAll("SELECT * FROM Tasks WHERE orgID=? AND taskType=?",orgID,cat)
         res.status(200).json(tasks)
     })
 
@@ -363,7 +363,20 @@ server.post("/api/tasks/create",
     }
 );
 
-server.post('/api/tasks/instance/complete',
+server.post('/api/tasks/delete',
+    ensureAuth,
+    body("taskID").isNumeric(),
+    async (request, response) => {
+        const orgID = await orgLookup(request.user.username)
+        const existing = await dbGet("SELECT * FROM Tasks WHERE id=? AND orgID=?",request.body.taskID,orgID)
+        if (!existing){
+            response.status(400).json({error: "cannot delete, not found"})
+        }
+        await dbRun("DELETE FROM Tasks WHERE id=?",request.body.taskID);
+        response.status(200).json({message:"deleted"})
+    })
+
+server.post('/api/tasks/complete',
     ensureAuth,
     body("taskID").isNumeric(),
     async (request, response) => {

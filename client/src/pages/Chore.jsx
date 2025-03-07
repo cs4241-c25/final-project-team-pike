@@ -37,6 +37,25 @@ export default function ChoreApp() {
         fetchChores();
     }, [selectedCategory]);
 
+    const deleteTask = async (taskID) => {
+        try {
+            const response = await fetch("http://localhost:3000/api/tasks/delete", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ taskID: taskID }),
+                credentials: "include"
+            })
+            if (response.ok){
+                console.log("deleted")
+            }
+        }
+        catch (e){
+            console.log(e)
+            return
+        }
+    }
     // Update task status in the database
     const updateStatus = async (taskID, newStatus) => {
         try {
@@ -210,7 +229,7 @@ export default function ChoreApp() {
                                 >
                                     <div>
                                         <p className="font-bold text-lg text-black">{chore.name}</p>
-                                        <p className="text-sm text-gray-500">Assigned to: {chore.assignee}</p>
+                                        <p className="text-sm text-gray-500">Assigned to: {chore.assigneeID}</p>
                                         <p className="text-sm text-gray-500">Due: {chore.dueDate}</p>
                                         <p
                                             className={`text-sm font-bold ${
@@ -230,9 +249,9 @@ export default function ChoreApp() {
                                         </button>
                                         <button
                                             className="px-4 py-2 rounded-lg bg-gray-300 text-white hover:bg-gray-400 transition font-medium"
-                                            onClick={() => updateStatus(chore.id, "Not Completed")}
+                                            onClick={() => deleteTask(chore.id)}
                                         >
-                                            Not Completed
+                                            Delete
                                         </button>
                                     </div>
                                 </div>
