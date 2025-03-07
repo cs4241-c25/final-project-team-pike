@@ -158,9 +158,10 @@ server.get('/api/org/inviteInfo',
     ensureAuth,
     query("code").escape().isAlphanumeric().isLength(6),
     async (request, response) => {
-        let sanitizationRes = validationResult(request);
+
+        sanitizationRes = validationResult(request);
         if (!sanitizationRes.isEmpty()) {
-            console.log("invite code validator fail: " + sanitizationRes.mapped())
+            console.log("invite code validator fail: " + sanitizationRes.array())
             response.status(400).json({error: sanitizationRes.array()[0]})
             return
         }
@@ -300,8 +301,7 @@ server.post("/api/org/create",
             response.status(500).json({error: e})
             return
         }
-        response.status(200).json({message: 'organization created',
-        inviteCode: code})
+        response.status(200).json({message: 'organization created', inviteCode: code})
     }
 );
 
