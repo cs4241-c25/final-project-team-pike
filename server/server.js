@@ -8,7 +8,7 @@ const {query, body, validationResult} = require('express-validator');
 const sqlite3 = require('sqlite3')
 const {promisify} = require('util');
 const {response, request} = require("express");
-const settleDebts = require("./money");
+// const settleDebts = require("./money");
 
 // constants
 const port = 3000
@@ -452,7 +452,7 @@ server.get("/api/payments/resolve",
             }
             payOut.push(tmp)
         })
-        const resolutions = settleDebts(userList, payOut);
+        const resolutions = "";// settleDebts(userList, payOut);
         response.status(200).json(resolutions)
     })
 
