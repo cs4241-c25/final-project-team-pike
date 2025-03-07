@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { AddCircleOutline } from "@mui/icons-material";
 import {TextField, Select, MenuItem, FormControl, InputLabel, Button, Autocomplete} from "@mui/material";
+import {useNavigate} from "react-router-dom";
 
 export default function ChoreApp() {
     const [chores, setChores] = useState({});
@@ -9,6 +10,7 @@ export default function ChoreApp() {
     const [showForm, setShowForm] = useState(false);
     const [people, setPeople] = useState([]);
     const [triggerUseEffect, setTriggerUseEffect] = useState(false);
+    const navigate = useNavigate();
     const [newChore, setNewChore] = useState({
         name: "",
         deadline: "",
@@ -29,7 +31,12 @@ export default function ChoreApp() {
                     const data = await response.json();
                     setChores((prev) => ({ ...prev, [selectedCategory]: data }));
                 } else {
-                    console.error("Error fetching chores:", response.statusText);
+                    if (response.status === 401){
+                        navigate('/')
+                    }
+                    else {
+                        console.error("Error fetching chores:", response.statusText);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching chores:", error);

@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Typography, Button, TextField, Box } from "@mui/material";
 import Navbar from "../components/Navbar";
-
-const API_URL = "http://localhost:3000/api/groceries";
+import { useNavigate } from "react-router-dom";
 
 export default function GroceryTracker() {
     const [groceries, setGroceries] = useState([]);
     const [form, setForm] = useState({ item: "", quantity: "" });
-
+    const navigate = useNavigate();
+    const API_URL = "http://localhost:3000/api/groceries";
     // Fetch groceries from the backend
     useEffect(() => {
         const fetchGroceries = async () => {
@@ -19,7 +19,14 @@ export default function GroceryTracker() {
                     },
                     credentials: "include"
                 });
-                if (!response.ok) throw new Error("Failed to fetch groceries");
+                if (!response.ok) {
+                    if (response.status === 401){
+                        navigate("/")
+                    }
+                    else{
+                        throw new Error("Failed to fetch groceries");
+                    }
+                }
                 const data = await response.json();
                 setGroceries(data);
             } catch (error) {

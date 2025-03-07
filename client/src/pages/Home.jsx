@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
     const fullText = "Welcome to Choremate";
     const [displayText, setDisplayText] = useState("");
     const typingSpeed = 100; // Typing speed in ms
-
+    const navigate = useNavigate();
     useEffect(() => {
         let i = 0;
         const interval = setInterval(() => {
@@ -24,6 +25,9 @@ export default function Home() {
         const getName = async () => {
             try {
                 const response = await fetch("http://localhost:3000/api/user", { credentials: "include" })
+                if (response.status === 401){
+                    navigate('/')
+                }
                 const data = await response.json()
                 localStorage.setItem("realName", data.realName)
             } catch (error) {

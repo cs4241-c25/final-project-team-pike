@@ -5,6 +5,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import LogoSVG from "../assets/logo.svg";
 import { useUser } from "../context/UserContext"; // Import user context
 
+
 const BACKEND="http://127.0.0.1:3000"
 
 export default function Navbar() {
@@ -38,6 +39,7 @@ export default function Navbar() {
 
             // did we log out?
             if (name === null || code === null) {
+
                 setUserInfo({name: "", initials: "", inviteCode: ""})
                 return
             }

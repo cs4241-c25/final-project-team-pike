@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { TextField, InputAdornment, Select, MenuItem, FormControl, InputLabel, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export default function ExpenseTracker() {
     const [form, setForm] = useState({ description: "", amountPaid: "", payer: "" });
@@ -7,10 +8,13 @@ export default function ExpenseTracker() {
     const [currentExpenses, setCurrentExpenses] = useState([]);
     const [pastExpenses, setPastExpenses] = useState([]);
     const [paymentResolutions, setPaymentResolutions] = useState([]);
-
+    const navigate = useNavigate();
     const fetchOrgUsers = async () => {
         try {
             const response = await fetch("http://localhost:3000/api/org/users", { credentials: "include" });
+            if (response.code === 401){
+                navigate("/")
+            }
             const data = await response.json();
             setOrgUsers(data.users);
         } catch (error) {
@@ -21,6 +25,9 @@ export default function ExpenseTracker() {
     const fetchExpenses = async () => {
         try {
             const response = await fetch("http://localhost:3000/api/payments", { credentials: "include" });
+            if (response.status === 401){
+                navigate('/')
+            }
             const data = await response.json();
             setCurrentExpenses(data.filter(expense => !expense.paidOff));
             setPastExpenses(data.filter(expense => expense.paidOff));
@@ -32,6 +39,9 @@ export default function ExpenseTracker() {
     const fetchPaymentResolutions = async () => {
         try {
             const response = await fetch("http://localhost:3000/api/payments/resolve", { credentials: "include" });
+            if (response.status === 401){
+                navigate('/')
+            }
             const resolvedData = await response.json();
             setPaymentResolutions(resolvedData);
         } catch (error) {
