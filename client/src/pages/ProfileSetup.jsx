@@ -15,7 +15,8 @@ export default function ProfileSetup() {
         if (name.trim()) {
             fetch(BACKEND + "/api/user/create", {
                 method: "POST",
-                body: JSON.stringify({ realName: name.trim() }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: name.trim() }),
                 credentials: "include"
             }).then((res) => {
                 if (res.status === 200) {
