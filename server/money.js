@@ -25,7 +25,7 @@ export default function settleDebts(allNames, allPayments) {
 
         for (let i = 0; i < N; i++) {
             // skip ourselves
-            if (i == owedIdx) {
+            if (i === owedIdx) {
                 continue
             }
 

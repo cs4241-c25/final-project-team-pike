@@ -7,7 +7,8 @@ const GitHubStrategy = require("passport-github2").Strategy
 const {query, body, validationResult} = require('express-validator');
 const sqlite3 = require('sqlite3')
 const {promisify} = require('util');
-const {response} = require("express");
+const {response, request} = require("express");
+const settleDebts = require("./money");
 
 // constants
 const port = 3000
@@ -98,7 +99,7 @@ server.get("/logout", (req, res) => {
 // ------------------------ db helper functions ------------------------
 // lookup a user's associated organization
 async function orgLookup(username) {
-    return await dbGet("SELECT orgID FROM Users WHERE github = ?", username)
+    return (await dbGet("SELECT orgID FROM Users WHERE github = ?", username)).orgID
 }
 
 // ------------------------ handle GET requests ------------------------
@@ -134,6 +135,18 @@ server.get("/api/user/by-id/:github", ensureAuth, async (request, response) => {
         record
     });
 });
+
+server.get("/api/org/users",
+    ensureAuth,
+    async (req, res) => {
+        const myOrg = await orgLookup(req.user.username)
+        if (!myOrg){
+            res.status(401).json({error: "user not associated with an org!"})
+            return
+        }
+        const dat = await dbAll("SELECT realName FROM Users WHERE orgID = ?", myOrg);
+        res.status(200).json({users: dat})
+    })
 
 server.get("/api/org/:orgID/users", ensureAuth, async (request, response) => {
     const orgID = request.params.orgID
@@ -313,7 +326,6 @@ server.post("/api/org/create",
             response.status(500).json({error: e})
             return
         }
-
         const orgID = await dbGet("SELECT id FROM Organizations WHERE inviteCode = ?",code);
         await dbRun("UPDATE Users SET orgID = ? WHERE github = ?", orgID.id, organizer);
         response.status(200).json({message: 'organization created', inviteCode: code})
@@ -323,7 +335,6 @@ server.post("/api/org/create",
 server.post("/api/tasks/create",
     ensureAuth,
     body('title').isString().escape(),
-    body('description').isString().escape(),
     body('type').isString().escape(),
     body('schedule').optional().isString(),
     async (request, response) => {
@@ -340,12 +351,13 @@ server.post("/api/tasks/create",
             return
         }
         try {
-            await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?, ?)",
-                orgID, task.title, task.description, typeRow.id, task.schedule)
+            await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?)",
+                orgID, task.title, typeRow.id, task.schedule)
         } catch (e) {
             response.status(500).json({error: e})
             return
         }
+
         // todo: immediate instance create
         response.status(200).json({message: 'task created'})
     }
@@ -428,6 +440,81 @@ server.post("/api/tasks/instance/cancel",
     }
 )
 
+server.post("/api/payments/add",
+    ensureAuth,
+    body('payerID').isString(),
+    body("amountPaid").isFloat(),
+    body('description').isString(),
+    async (request, response) => {
+        const issues = validationResult(request)
+        if (!issues.isEmpty()){
+            console.log(issues.array()[0].msg)
+            response.status(400).json({error: issues.array()[0].msg})
+            return
+        }
+        try {
+            await dbRun("INSERT INTO Expenses (description, payerID, amountPaid)  VALUES (?,?,?)", request.body.description, request.body.payer, request.body.amountPaid)
+        }
+        catch (e){
+            response.status(500).json({error: e})
+            console.log("Cannot add payment: "+e)
+            return
+        }
+        response.status(200).json({status: "OK"})
+    })
+
+server.get("/api/payments", ensureAuth, async(request, response) => {
+    const org = await orgLookup(request.user.username)
+    const data = await dbAll("SELECT id,description,payerID,amountPaid,paidOff FROM Expenses E JOIN Users U ON U.github = E.payerID WHERE U.orgID = ?",org)
+    response.status(200).json(data)
+})
+
+server.post("/api/payments/complete",
+    ensureAuth,
+    body("paymentIDs").isArray(),
+    async (request, response) => {
+        const valid = validationResult(request);
+        if (!valid.isEmpty()){
+            response.status(400).json({errors: valid.array()})
+            console.log("Failed to complete payment(s)")
+            return
+        }
+        const paymentIdArr = request.body.paymentIDs
+        for (let i=0; i < paymentIdArr.length; i++){
+            await dbRun("UPDATE Expenses SET paidOff = 1 WHERE id = ?", paymentIdArr[i])
+        }
+        response.code(200).json({status: "OK"})
+})
+
+server.get("/api/payments/resolve",
+    ensureAuth,
+    async (request, response) => {
+        const myOrg = orgLookup(request.user.username)
+        const userData = await dbAll("SELECT realName FROM Users WHERE orgID = ?",myOrg);
+        const paymentData = await dbAll("SELECT E.payerID, E.amountPaid FROM Expenses E JOIN Users U ON E.payerID = U.github WHERE U.orgID = ? AND E.paidOff = 0", myOrg)
+        if (!userList || !paymentData){
+            console.log("DB returned bad vals! exit.")
+            response.code(500).json({error: "failed"});
+            return
+        }
+        // prepare data for algs
+        let userList = []
+        let payOut = []
+        userData.forEach(row=>{
+            userList.push(row.realName)
+        })
+        paymentData.forEach(row=>{
+            const tmp = {
+                spender: row.payerID,
+                 value: row.amountPaid
+            }
+            payOut.push(tmp)
+        })
+        const resolutions = settleDebts(userList, payOut);
+        response.status(200).json(resolutions)
+    })
+
+
 // ✅ Fetch all groceries (filtered by organization)
 server.get("/api/groceries", async (req, res) => {
     try {
@@ -480,12 +567,12 @@ server.post("/api/groceries", async (req, res) => {
 });
 
 // ✅ Move an item from Needed to Inventory
-server.put("/api/groceries/:id", async (req, res) => {
+server.put("/api/groceries/:id", ensureAuth, async (req, res) => {
     const {listType} = req.body;
     const itemId = req.params.id;
 
     try {
-        const userOrg = await orgLookup(req.headers["x-username"]);
+        const userOrg = await orgLookup(req.user.username);
         if (!userOrg) {
             return res.status(400).json({error: "User is not in an organization"});
         }
@@ -511,28 +598,12 @@ server.put("/api/groceries/:id", async (req, res) => {
     }
 });
 
-server.post("/api/payments/add",
-    ensureAuth,
-    body('payer').isString(),
-    body("amountPaid").isFloat(),
-    body('description').isString(),
-    async (request, response) => {
-        const issues = validationResult(request)
-        if (!issues.isEmpty()){
-            console.log(issues.mapped())
-            response.status(400).json({error: "bad request parameters"})
-            return
-        }
-        // TODO: finish this function!
-
-    })
-
 // ✅ Delete a grocery item
-server.delete("/api/groceries/:id", async (req, res) => {
+server.delete("/api/groceries/:id", ensureAuth, async (req, res) => {
     const itemId = req.params.id;
 
     try {
-        const userOrg = await orgLookup(req.headers["x-username"]);
+        const userOrg = await orgLookup(req.user.username);
         if (!userOrg) {
             return res.status(400).json({error: "User is not in an organization"});
         }
