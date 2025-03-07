@@ -334,7 +334,6 @@ server.post("/api/org/create",
 server.post("/api/tasks/create",
     ensureAuth,
     body('title').isString().escape(),
-    body('description').isString().escape(),
     body('type').isString().escape(),
     body('schedule').optional().isString(),
     async (request, response) => {
@@ -351,8 +350,8 @@ server.post("/api/tasks/create",
             return
         }
         try {
-            await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?, ?)",
-                orgID, task.title, task.description, typeRow.id, task.schedule)
+            await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?)",
+                orgID, task.title, typeRow.id, task.schedule)
         } catch (e) {
             response.status(500).json({error: e})
             return
@@ -484,6 +483,13 @@ server.post("/api/payments/complete",
         }
         response.code(200).json({status: "OK"})
 })
+
+server.get("/api/payments/resolve",
+    ensureAuth,
+    async (request, response) => {
+
+    })
+
 
 // ✅ Fetch all groceries (filtered by organization)
 server.get("/api/groceries", async (req, res) => {
