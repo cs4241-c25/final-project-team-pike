@@ -339,10 +339,10 @@ server.post("/api/tasks/create",
             response.status(400).json({error: "Assignee not found!"})
             return
         }
-        const orgID = orgLookup(request.user.username);
+        const orgID = await orgLookup(request.user.username);
         try {
             await dbRun("INSERT INTO Tasks (taskType, name, orgID, dueDate, assigneeID, status) VALUES (?,?,?,?,?,?)",
-                request.body.type, request.body.title, orgID, request.body.duedate, assigneeID.github, "Pending");
+                request.body.type, request.body.title, orgID, request.body.schedule, assigneeID.github, "Pending");
         }
         catch (e){
             console.log("Couldn't create task!: "+e)
