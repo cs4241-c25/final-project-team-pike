@@ -49,20 +49,27 @@ export default function ProfileSetup() {
                         <Box className="flex items-center space-x-4 w-full">
                             {/* Circular Avatar with Initials (Stored Globally) */}
                             <Avatar sx={{ bgcolor: "#ec4899", color: "white", fontWeight: "bold", width: 48, height: 48 }}>
-                                {name
-                                    ? name.split(" ").map((word) => word[0].toUpperCase()).join("").slice(0, 2)
+                                {name.trim() // Remove leading/trailing spaces
+                                    ? name
+                                        .split(" ") // Split into words
+                                        .filter((word) => word.length > 0) // Remove empty values (caused by multiple spaces)
+                                        .map((word) => word[0].toUpperCase()) // Get first letter of each word
+                                        .slice(0, 2) // Take only the first two initials
+                                        .join("") // Join them together
                                     : ""}
                             </Avatar>
 
 
+
                             {/* Name Input */}
                             <TextField
-                                className="flex-grow"
+                                className="!mb-8"
                                 label="Enter your name"
                                 fullWidth
                                 value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                onChange={(e) => setName(e.target.value)} // Ensures spaces are not blocked
                             />
+
                         </Box>
 
                         {/* Done Button */}
