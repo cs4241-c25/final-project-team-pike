@@ -22,10 +22,12 @@ CREATE TABLE IF NOT EXISTS Tasks
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     taskType    TEXT,
     name        TEXT    NOT NULL,
+    orgID       INTEGER NOT NULL,
     description TEXT,
     assigneeID  TEXT,
     status      TEXT    NOT NULL,
     dueDate     TEXT,
+    FOREIGN KEY (orgID) REFERENCES Organizations (id),
     FOREIGN KEY (assigneeID) REFERENCES Users (github)
 );
 
