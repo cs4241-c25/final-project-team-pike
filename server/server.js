@@ -98,7 +98,7 @@ server.get("/logout", (req, res) => {
 // ------------------------ db helper functions ------------------------
 // lookup a user's associated organization
 async function orgLookup(username) {
-    return await dbGet("SELECT orgID FROM Users WHERE github = ?", username)
+    return (await dbGet("SELECT orgID FROM Users WHERE github = ?", username)).orgID
 }
 
 // ------------------------ handle GET requests ------------------------
@@ -134,6 +134,18 @@ server.get("/api/user/by-id/:github", ensureAuth, async (request, response) => {
         record
     });
 });
+
+server.get("/api/org/users",
+    ensureAuth,
+    async (req, res) => {
+        const myOrg = await orgLookup(req.user.username)
+        if (!myOrg){
+            res.status(401).json({error: "user not associated with an org!"})
+            return
+        }
+        const dat = await dbAll("SELECT realName FROM Users WHERE orgID = ?", myOrg);
+        res.status(200).json({users: dat})
+    })
 
 server.get("/api/org/:orgID/users", ensureAuth, async (request, response) => {
     const orgID = request.params.orgID
