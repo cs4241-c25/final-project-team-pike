@@ -1,0 +1,63 @@
+INSERT INTO Organizations (name, organizerID, inviteCode) VALUES ('The Boyz', 'billybob', '123123');
+INSERT INTO Organizations (name, organizerID, inviteCode) VALUES ('Mojo Dojo Casa', 'ken23', 'B4RB1E');
+INSERT INTO Organizations (name, organizerID, inviteCode) VALUES ('Deep Space 9', 'devjane', 'PR0SPR');
+
+
+INSERT INTO Users (github, realName, orgID) VALUES ('billybob', 'Billy Bob', 1);
+INSERT INTO Users (github, realName, orgID) VALUES ('justken', 'Ken Doll', 2);
+INSERT INTO Users (github, realName, orgID) VALUES ('alice123', 'Alice Johnson', 1);
+INSERT INTO Users (github, realName, orgID) VALUES ('coder_mike', 'Michael Smith', 2);
+INSERT INTO Users (github, realName, orgID) VALUES ('devjane', 'Jane Doe', 3);
+INSERT INTO Users (github, realName, orgID) VALUES ('techguru', 'Robert Brown', 1);
+INSERT INTO Users (github, realName, orgID) VALUES ('sarah_dev', 'Sarah Connor', 2);
+INSERT INTO Users (github, realName, orgID) VALUES ('peter42', 'Peter Parker', 3);
+INSERT INTO Users (github, realName, orgID) VALUES ('hacker_joe', 'Joe Black', 1);
+INSERT INTO Users (github, realName, orgID) VALUES ('frontend_fred', 'Fred Wilson', 2);
+INSERT INTO Users (github, realName, orgID) VALUES ('backend_betty', 'Betty White', 3);
+INSERT INTO Users (github, realName, orgID) VALUES ('data_dan', 'Dan Carter', 1);
+INSERT INTO Users (github, realName, orgID) VALUES ('ml_jessie', 'Jessie Pinkman', 2);
+INSERT INTO Users (github, realName, orgID) VALUES ('cyber_kate', 'Katherine ONeil', 3);
+INSERT INTO Users (github, realName, orgID) VALUES ('go_guru', 'Liam Thompson', 1);
+INSERT INTO Users (github, realName, orgID) VALUES ('rustacean_rick', 'Rick Sanchez', 2);
+INSERT INTO Users (github, realName, orgID) VALUES ('embedded_emma', 'Emma Watson', 3);
+INSERT INTO Users (github, realName, orgID) VALUES ('robo_ray', 'Raymond Holt', 1);
+
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Onions', 'peter42', 13.14);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Onions', 'peter42', 13.14);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Office Supplies', 'alice123', 45.67);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Conference Tickets', 'coder_mike', 150.00);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Team Lunch', 'devjane', 87.23);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Software Subscription', 'techguru', 29.99);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Hardware Purchase', 'sarah_dev', 199.99);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Travel Expenses', 'peter42', 312.45);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Event Catering', 'hacker_joe', 120.50);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Cloud Services', 'frontend_fred', 75.00);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Printer Ink', 'backend_betty', 18.25);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Internet Bill', 'data_dan', 60.00);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Laptop Repair', 'ml_jessie', 135.89);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Security Software', 'cyber_kate', 49.99);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Coffee & Snacks', 'go_guru', 25.40);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Server Hosting', 'rustacean_rick', 300.00);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Prototyping Materials', 'embedded_emma', 85.75);
+INSERT INTO Expenses (description, payerID, amountPaid) VALUES ('Advertising', 'robo_ray', 150.00);
+
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Bananas', 4, 1);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Bananas', 4, 1);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Apples', 10, 2);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Carrots', 25, 3);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Tomatoes', 15, 1);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Potatoes', 30, 2);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Oranges', 8, 3);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Lettuce', 5, 1);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Strawberries', 12, 2);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Grapes', 20, 3);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Pineapples', 3, 1);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Onions', 18, 2);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Garlic', 7, 3);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Blueberries', 9, 1);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Mushrooms', 14, 2);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Cucumbers', 11, 3);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Peppers', 13, 1);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Eggplants', 6, 2);
+INSERT INTO Inventory (name, quantity, orgID) VALUES ('Cherries', 10, 3);
+

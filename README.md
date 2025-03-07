@@ -7,7 +7,7 @@ In addition to expense tracking, Choremate offers the ability to create and invi
 ---
 
 ## Deployed Link:
-[Access the Live Application](Glitch deployment link)
+[Access the Live Application](http://ec2-54-158-172-176.compute-1.amazonaws.com)
 
 ## GitHub Repository:
 [Choremates Repository](https://github.com/cs4241-c25/final-project-team-pike)
