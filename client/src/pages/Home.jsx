@@ -20,6 +20,40 @@ export default function Home() {
         return () => clearInterval(interval);
     }, []);
 
+    useEffect(() => {
+        const getName = async () => {
+            try {
+                const response = await fetch("http://localhost:3000/api/user", { credentials: "include" })
+                const data = await response.json()
+                localStorage.setItem("realName", data.realName)
+            } catch (error) {
+                if (error.response.status !== 401) {
+                    console.error("Error fetching name:", error)
+                }
+            }
+        }
+            
+        const getInviteCode = async () => {
+            try {
+                const response = await fetch("http://localhost:3000/api/org/inviteCode", { credentials: "include" })
+                const data = await response.json()
+                localStorage.setItem("inviteCode", data.invite)
+            } catch (error) {
+                console.error("Error fetching invite code:", error)
+            }
+        }
+
+        const populateLocalStorage = async () => {
+            await getName()
+            if (localStorage.getItem("realName") !== null) {
+                await getInviteCode()
+            }
+
+            window.dispatchEvent(new Event("storage"));
+        }
+        populateLocalStorage()
+    }, []);
+    
     return (
         <div className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-white p-6 fixed inset-0">
             <Typography

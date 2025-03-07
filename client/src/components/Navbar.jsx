@@ -10,7 +10,8 @@ const BACKEND="http://127.0.0.1:3000"
 export default function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
-    const { user } = useUser(); // Get user data (name, initials)
+    // const { user } = useUser(); // Get user data (name, initials)
+    const [userInfo, setUserInfo] = useState({name: "", initials: "", inviteCode: ""})
     const [inviteCode, setInviteCode] = useState("Loading...");
     // Open/close mobile menu
     const toggleMobileMenu = () => {
@@ -25,24 +26,33 @@ export default function Navbar() {
         setAnchorEl(null);
     };
 
-    const getInviteCode = async () => {
-        const res = await fetch(BACKEND+"/api/org/inviteCode", {
-            method: "GET",
-            credentials: "include"
-    })
-        if (!res.ok){
-            return "ERROR"
-        }
-        const data = await res.json()
-        setInviteCode(data.invite)
+    const clearLocalStorage = () => {
+        localStorage.removeItem("realName")
+        localStorage.removeItem("inviteCode")
     }
+
     useEffect(() => {
-        async function fetchCode() {
-            const code = await getInviteCode();
-            setInviteCode(code);
+        const updatePersonalInfo = () => {
+            let name = localStorage.getItem("realName")
+            let code = localStorage.getItem("inviteCode")
+
+            // did we log out?
+            if (name === null || code === null) {
+                setUserInfo({name: "", initials: "", inviteCode: ""})
+                return
+            }
+
+            // we didn't log out, set actual data
+            const nameParts = name.trim().split(" ");
+            const initials = nameParts.length > 1
+                ? `${nameParts[0][0].toUpperCase()}${nameParts[1][0].toUpperCase()}`
+                : nameParts[0][0].toUpperCase();
+
+            setUserInfo({name: name, initials: initials, inviteCode: code})
         }
-        fetchCode().then();
+        window.addEventListener("storage", updatePersonalInfo)
     }, []);
+    
     return (
         <>
             <AppBar position="fixed" sx={{ backgroundColor: "#f8f9fa" }}>
@@ -66,7 +76,7 @@ export default function Navbar() {
                         <Button component={Link} to="/chores" sx={{ color: "black", "&:hover": { color: "#ec4899" } }}>Chores</Button>
                         <Button component={Link} to="/expense-tracker" sx={{ color: "black", "&:hover": { color: "#ec4899" } }}>Expenses</Button>
                         <Button component={Link} to="/grocery-tracker" sx={{ color: "black", "&:hover": { color: "#ec4899" } }}>Groceries</Button>
-                        <Button href="http://localhost:3000/logout" sx={{ color: "black", "&:hover": { color: "#ec4899" } }}>Logout</Button>
+                        <Button href="http://localhost:3000/logout" sx={{ color: "black", "&:hover": { color: "#ec4899" } }} onClick={clearLocalStorage}>Logout</Button>
                     </Box>
 
                     {/* Right Side - Avatar */}
@@ -74,13 +84,13 @@ export default function Navbar() {
                         {/* Avatar (Clickable with Dropdown) */}
                         <IconButton onClick={handleAvatarClick} sx={{ p: 0 }}>
                             <Avatar sx={{ bgcolor: "#ec4899", color: "white", fontWeight: "bold" }}>
-                                {user.initials || "?"}
+                                {userInfo.initials || "?"}
                             </Avatar>
                         </IconButton>
                         {/* Dropdown Menu */}
                         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-                            <MenuItem disabled>{user.name || "User"}</MenuItem>
-                            <MenuItem disabled>Code: {inviteCode}</MenuItem>
+                            <MenuItem disabled>{userInfo.name || "User"}</MenuItem>
+                            <MenuItem disabled>Code: {userInfo.inviteCode}</MenuItem>
                         </Menu>
 
                         {/* Mobile Menu Button */}
