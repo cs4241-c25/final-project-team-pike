@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AddCircleOutline } from "@mui/icons-material";
 import { TextField, Select, MenuItem, FormControl, InputLabel, Button } from "@mui/material";
 
@@ -39,7 +39,7 @@ export default function ChoreApp() {
             if (response.ok) {
                 setChores((prev) => ({
                     ...prev,
-                    [newChore.category]: [...(prev[newChore.category] || []), newChore],
+                    [newChore.category]: [...(prev[newChore.category] || []), { ...newChore }],
                 }));
                 setShowForm(false);
                 setNewChore({ name: "", deadline: "", assignee: "", category: "Cleaning", status: "Not Completed" });
@@ -52,11 +52,22 @@ export default function ChoreApp() {
         }
     };
 
+    const updateStatus = (category, index, status) => {
+        setChores((prevChores) => {
+            const updatedChores = { ...prevChores };
+            if (updatedChores[category]) {
+                updatedChores[category][index] = {
+                    ...updatedChores[category][index],
+                    status,
+                };
+            }
+            return updatedChores;
+        });
+    };
+
     return (
         <div className="w-screen min-h-screen bg-white flex flex-col items-center justify-start pt-[150px]">
-            {/* Main Content */}
             <div className="flex w-full max-w-5xl gap-6">
-                {/* Sidebar */}
                 <aside className="w-1/4 p-6 border-r border-gray-300">
                     <h2 className="text-xl font-bold mb-6 !text-black">Categories</h2>
                     <div className="space-y-3">
@@ -82,123 +93,44 @@ export default function ChoreApp() {
                         <AddCircleOutline /> Add Chore
                     </button>
                 </aside>
-
-                {/* Chores List */}
                 <section className="w-3/4 p-6">
                     <h2 className="text-3xl font-bold mb-6 text-black">{selectedCategory} Chores</h2>
-
-                    {/* Inline Chore Form - Appears When "Add Chore" is Clicked */}
                     {showForm && (
                         <div className="text-black bg-white p-6 rounded-lg shadow-md border mb-6">
                             <h2 className="text-2xl font-bold mb-4 text-pink-400">Add a Chore</h2>
-
-                            {/* MUI TextField for Task Name */}
-                            <TextField
-                                label="Task Name"
-                                variant="outlined"
-                                fullWidth
-                                value={newChore.name}
-                                onChange={(e) => setNewChore({ ...newChore, name: e.target.value })}
-                                className="!mb-5"
-                            />
-
-                            {/* MUI TextField for Deadline */}
-                            <TextField
-                                label="Deadline"
-                                type="datetime-local"
-                                variant="outlined"
-                                fullWidth
-                                InputLabelProps={{ shrink: true }}
-                                value={newChore.deadline}
-                                onChange={(e) => setNewChore({ ...newChore, deadline: e.target.value })}
-                                className="!mb-5"
-                            />
-
-                            {/* MUI TextField for Assignee */}
-                            <TextField
-                                label="Assign To"
-                                variant="outlined"
-                                fullWidth
-                                value={newChore.assignee}
-                                onChange={(e) => setNewChore({ ...newChore, assignee: e.target.value })}
-                                className="!mb-5"
-                            />
-
-                            {/* MUI Select for Categories */}
+                            <TextField label="Task Name" variant="outlined" fullWidth value={newChore.name} onChange={(e) => setNewChore({ ...newChore, name: e.target.value })} className="!mb-5" />
+                            <TextField label="Deadline" type="datetime-local" variant="outlined" fullWidth InputLabelProps={{ shrink: true }} value={newChore.deadline} onChange={(e) => setNewChore({ ...newChore, deadline: e.target.value })} className="!mb-5" />
+                            <TextField label="Assign To" variant="outlined" fullWidth value={newChore.assignee} onChange={(e) => setNewChore({ ...newChore, assignee: e.target.value })} className="!mb-5" />
                             <FormControl fullWidth variant="outlined" className="!mb-5">
                                 <InputLabel>Category</InputLabel>
-                                <Select
-                                    value={newChore.category}
-                                    onChange={(e) => setNewChore({ ...newChore, category: e.target.value })}
-                                    label="Category"
-                                >
-                                    {categories.map((category) => (
-                                        <MenuItem key={category} value={category}>
-                                            {category}
-                                        </MenuItem>
-                                    ))}
+                                <Select value={newChore.category} onChange={(e) => setNewChore({ ...newChore, category: e.target.value })} label="Category">
+                                    {categories.map((category) => (<MenuItem key={category} value={category}>{category}</MenuItem>))}
                                 </Select>
                             </FormControl>
-
                             <div className="flex justify-end gap-3">
-                                <Button
-                                    variant="outlined"
-                                    color="!red"
-                                    onClick={() => setShowForm(false)}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={handleAddChore}
-                                >
-                                    Save
-                                </Button>
+                                <Button variant="outlined" color="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                                <Button variant="contained" color="primary" onClick={handleAddChore}>Save</Button>
                             </div>
                         </div>
                     )}
-
-                    {/* List of Chores */}
                     {chores[selectedCategory]?.length > 0 ? (
                         <div className="space-y-4">
                             {chores[selectedCategory].map((chore, index) => (
-                                <div
-                                    key={index}
-                                    className="flex justify-between items-center p-5 border rounded-lg shadow-md bg-gray-50 hover:shadow-lg transition"
-                                >
+                                <div key={index} className="flex justify-between items-center p-5 border rounded-lg shadow-md bg-gray-50 hover:shadow-lg transition">
                                     <div>
                                         <p className="font-bold text-lg text-black">{chore.name}</p>
                                         <p className="text-sm text-gray-500">Assigned to: {chore.assignee}</p>
                                         <p className="text-sm text-gray-500">Due: {chore.deadline}</p>
-                                        <p
-                                            className={`text-sm font-bold ${
-                                                chore.status === "Done" ? "text-green-600" : "text-red-600"
-                                            }`}
-                                        >
-                                            Status: {chore.status}
-                                        </p>
+                                        <p className={`text-sm font-bold ${chore.status === "Done" ? "text-green-600" : "text-red-600"}`}>Status: {chore.status}</p>
                                     </div>
                                     <div className="flex gap-3">
-                                        <button
-                                            className="px-4 py-2 rounded-lg bg-pink-400 text-white hover:bg-pink-500 transition font-medium"
-                                            onClick={() => updateStatus(selectedCategory, index, "Done")}
-                                        >
-                                            Done
-                                        </button>
-                                        <button
-                                            className="px-4 py-2 rounded-lg bg-gray-300 text-white hover:bg-gray-400 transition font-medium"
-                                            onClick={() => updateStatus(selectedCategory, index, "Not Completed")}
-                                        >
-                                            Not Completed
-                                        </button>
+                                        <button className="px-4 py-2 rounded-lg bg-pink-400 text-white hover:bg-pink-500 transition font-medium" onClick={() => updateStatus(selectedCategory, index, "Done")}>Done</button>
+                                        <button className="px-4 py-2 rounded-lg bg-gray-300 text-white hover:bg-gray-400 transition font-medium" onClick={() => updateStatus(selectedCategory, index, "Not Completed")}>Not Completed</button>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    ) : (
-                        <p className="text-gray-500">No chores yet. Add one!</p>
-                    )}
+                    ) : <p className="text-gray-500">No chores yet. Add one!</p>}
                 </section>
             </div>
         </div>
