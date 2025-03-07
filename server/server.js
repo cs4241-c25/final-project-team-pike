@@ -291,29 +291,34 @@ server.post("/api/user/enroll",
         response.status(200).json({message: 'user enrolled'})
     });
 
-server.post("/api/org/create",
-    ensureAuth,
-    body("name").isString().escape(),
+server.post("/api/tasks/create",
     async (request, response) => {
-        const orgName = request.body.name
-        const organizer = request.user.username
-        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        let code = "";
-        for (let i = 0; i < 6; i++) {
-            code += characters.charAt(Math.floor(Math.random() * characters.length));
-        }
-        const existing = await dbGet("SELECT * FROM Organizations WHERE name = ?", orgName)
-        if (existing) {
-            response.status(400).json({error: "Already exists", orgID: existing.id})
-            return
-        }
+        console.log("Received request:", request.body); // Debugging
         try {
-            await dbRun("INSERT INTO Organizations (name, organizerID, inviteCode) VALUES (?,?,?)", orgName, organizer, code)
+            const orgID = await orgLookup(request.user.username);
+            console.log("Org ID:", orgID); // Debugging
+
+            if (!orgID) {
+                return response.status(400).json({ error: "Invalid org ID" });
+            }
+
+            const typeRow = await dbGet("SELECT * FROM TaskTypes WHERE orgID = ? AND name = ?", orgID, request.body.type);
+            console.log("Type row:", typeRow); // Debugging
+
+            if (!typeRow) {
+                return response.status(400).json({ error: "Invalid task type" });
+            }
+
+            await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?, ?)",
+                orgID, request.body.title, request.body.description, typeRow.id, request.body.schedule);
+
+            console.log("Task successfully created"); // Debugging
+            response.status(200).json({ message: "Task created" });
+
         } catch (e) {
-            response.status(500).json({error: e})
-            return
+            console.error("Error inserting task:", e); // Debugging
+            response.status(500).json({ error: e.message });
         }
-        response.status(200).json({message: 'organization created', inviteCode: code})
     }
 );
 
@@ -343,6 +348,7 @@ server.post("/api/tasks/create",
             response.status(500).json({error: e})
             return
         }
+
         // todo: immediate instance create
         response.status(200).json({message: 'task created'})
     }
