@@ -218,6 +218,15 @@ server.get("/api/user/tasks", ensureAuth, async (request, response) => {
     response.status(200).json(myTasks);
 });
 
+server.get("/api/tasks/by-category/:category",
+    ensureAuth,
+    async(req,res)=> {
+        const cat = req.params.category
+        const orgID = await orgLookup(req.user.username)
+        const tasks = await dbAll("SELECT * FROM Tasks WHERE orgID=? AND taskType=?",orgID,cat)
+        res.status(200).json(tasks)
+    })
+
 server.get("/api/tasks/:taskID", ensureAuth, async (request, response) => {
     const orgID = await orgLookup(request.user.username);
     const task = await dbGet("SELECT * FROM Tasks WHERE id = ?", request.params.taskID, orgID);
@@ -326,7 +335,7 @@ server.post("/api/tasks/create",
     ensureAuth,
     body('title').isString().escape(),
     body('type').isString().escape(),
-    body('duedate').optional().isString(),
+    body('schedule').optional().isString(),
     body("assignee").isString(),
     async (request, response) => {
         const validationErrs = validationResult(request);
@@ -334,18 +343,40 @@ server.post("/api/tasks/create",
             response.status(400).json(validationErrs.mapped());
             return;
         }
-        const assigneeID = await dbGet("SELECT github FROM Users WHERE realName = ?", assignee);
+        const assigneeID = await dbGet("SELECT github FROM Users WHERE realName = ?", request.body.assignee);
         if (!assigneeID){
             response.status(400).json({error: "Assignee not found!"})
             return
         }
-        const orgID = orgLookup(request.user.username);
-        await dbRun("INSERT INTO Tasks (taskType, name, orgID, dueDate, assigneeID, status) VALUES (?,?,?,?,?)",
-            request.body.type, request.body.title, orgID, request.body.duedate, request.body.assignee, "Pending");
+        const orgID = await orgLookup(request.user.username);
+        try {
+            await dbRun("INSERT INTO Tasks (taskType, name, orgID, dueDate, assigneeID, status) VALUES (?,?,?,?,?,?)",
+                request.body.type, request.body.title, orgID, request.body.schedule, assigneeID.github, "Pending");
+        }
+        catch (e){
+            console.log("Couldn't create task!: "+e)
+            response.status(500).json({error: e})
+            return
+        }
+        response.status(200).json({status: 'ok'})
+
     }
 );
 
-server.post('/api/tasks/instance/complete',
+server.post('/api/tasks/delete',
+    ensureAuth,
+    body("taskID").isNumeric(),
+    async (request, response) => {
+        const orgID = await orgLookup(request.user.username)
+        const existing = await dbGet("SELECT * FROM Tasks WHERE id=? AND orgID=?",request.body.taskID,orgID)
+        if (!existing){
+            response.status(400).json({error: "cannot delete, not found"})
+        }
+        await dbRun("DELETE FROM Tasks WHERE id=?",request.body.taskID);
+        response.status(200).json({message:"deleted"})
+    })
+
+server.post('/api/tasks/complete',
     ensureAuth,
     body("taskID").isNumeric(),
     async (request, response) => {
