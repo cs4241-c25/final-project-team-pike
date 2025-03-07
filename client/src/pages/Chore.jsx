@@ -36,7 +36,7 @@ export default function ChoreApp() {
             }
         };
 
-        fetchChores();
+        fetchChores().then();
     }, [selectedCategory, triggerUseEffect]);
 
     useEffect(() => {

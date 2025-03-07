@@ -492,13 +492,11 @@ server.get("/api/payments/resolve",
     })
 
 
-// ✅ Fetch all groceries (TODO filter by organization)
-server.get("/api/groceries", async (req, res) => {
+// ✅ Fetch all groceries
+server.get("/api/groceries", ensureAuth, async (req, res) => {
     try {
-        console.log("GET /api/groceries called");
-
-        const groceries = await dbAll("SELECT * FROM Inventory");
-        console.log("Fetched groceries:", groceries);
+        const org = await orgLookup(req.user.username)
+        const groceries = await dbAll("SELECT * FROM Inventory WHERE orgID = ?", org);
 
         res.status(200).json(groceries);
     } catch (error) {
@@ -508,20 +506,17 @@ server.get("/api/groceries", async (req, res) => {
 });
 
 // ✅ Add a new grocery item
-server.post("/api/groceries", async (req, res) => {
+server.post("/api/groceries", ensureAuth, async (req, res) => {
     const { name, quantity } = req.body;
-
-    console.log("Received POST request:", req.body);
 
     if (!name || quantity === undefined) {
         return res.status(400).json({ error: "Name and quantity are required" });
     }
 
     try {
-        await dbRun("INSERT INTO Inventory (name, quantity) VALUES (?, ?)", name, quantity);
-
+        const org = await orgLookup(req.user.username)
+        await dbRun("INSERT INTO Inventory (name, quantity, orgID) VALUES (?, ?, ?)", name, quantity, org);
         const newItem = await dbGet("SELECT * FROM Inventory ORDER BY id DESC LIMIT 1");
-        console.log("New item added:", newItem);
 
         res.status(201).json(newItem);
     } catch (error) {
@@ -531,7 +526,7 @@ server.post("/api/groceries", async (req, res) => {
 });
 
 // ✅ Delete a grocery item
-server.delete("/api/groceries/:id", async (req, res) => {
+server.delete("/api/groceries/:id", ensureAuth, async (req, res) => {
     const itemId = req.params.id;
 
     try {
@@ -541,8 +536,6 @@ server.delete("/api/groceries/:id", async (req, res) => {
         }
 
         await dbRun("DELETE FROM Inventory WHERE id = ?", itemId);
-        console.log("Deleted item ID:", itemId);
-
         res.status(200).json({ message: "Item deleted successfully" });
     } catch (error) {
         console.error("Error deleting item:", error);

@@ -33,8 +33,11 @@ CREATE TABLE IF NOT EXISTS Tasks
 
 CREATE TABLE IF NOT EXISTS Inventory
 (
-    name     TEXT    NOT NULL,
-    quantity INTEGER NOT NULL
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT    NOT NULL,
+    quantity    INTEGER NOT NULL,
+    orgID       INTEGER NOT NULL,
+    FOREIGN KEY (orgID) REFERENCES Organizations (id)
 );
 
 CREATE TABLE IF NOT EXISTS Expenses
