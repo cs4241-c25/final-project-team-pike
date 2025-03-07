@@ -1,34 +1,45 @@
 import { useState } from "react";
-import { Button, Card, TextField, Avatar, Box, Alert, Snackbar } from "@mui/material";
+import { Button, Card, TextField, Typography, Avatar, Box, Alert, Snackbar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import ProfileSVG from "../assets/profile.svg";
-import { useUser } from "../context/UserContext.jsx"; // Import the context
 
 const BACKEND = "http://localhost:3000";
 
 export default function ProfileSetup() {
     const [name, setName] = useState("");
-    const { updateUser } = useUser(); // Get update function from context
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
 
     const handleDone = () => {
-        if (name) {
+        if (name.trim()) {
             fetch(BACKEND + "/api/user/create", {
                 method: "POST",
-                body: JSON.stringify({ name: name }),
+                body: JSON.stringify({ realName: name.trim() }),
                 credentials: "include"
             }).then((res) => {
                 if (res.status === 200) {
-                    updateUser(name); // ✅ Store initials globally
                     navigate("/group-selection");
+                } else if (res.status === 400) {
+                    navigate("/home");
+                } else if (res.status === 401) {
+                    navigate("/"); // Redirect to login
                 } else {
+                    console.log(res.body);
                     setOpen(true);
                 }
             });
         }
     };
+
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter" || e.key === "NumpadEnter") {
+            e.preventDefault();
+            handleDone();
+        }
+    };
+
+
 
     return (
         <div className="w-screen h-screen flex flex-col items-center justify-center bg-white text-black overflow-y-auto">
@@ -44,46 +55,41 @@ export default function ProfileSetup() {
                 </Snackbar>
 
                 <Card className="p-10 shadow-xl w-full max-w-3xl text-center rounded-3xl border border-gray-200 bg-white">
-                    <Box className="space-y-6 w-full">
-                        {/* Avatar + Name Input Row (Same Line) */}
-                        <Box className="flex items-center space-x-4 w-full">
-                            {/* Circular Avatar with Initials (Stored Globally) */}
-                            <Avatar sx={{ bgcolor: "#ec4899", color: "white", fontWeight: "bold", width: 48, height: 48 }}>
-                                {name.trim() // Remove leading/trailing spaces
-                                    ? name
-                                        .split(" ") // Split into words
-                                        .filter((word) => word.length > 0) // Remove empty values (caused by multiple spaces)
-                                        .map((word) => word[0].toUpperCase()) // Get first letter of each word
-                                        .slice(0, 2) // Take only the first two initials
-                                        .join("") // Join them together
-                                    : ""}
-                            </Avatar>
+                    <Box className="flex items-center space-x-4 w-full mb-6">
+                        {/* Avatar Icon */}
+                        <Avatar sx={{ bgcolor: "#ec4899", color: "white", fontWeight: "bold", width: 56, height: 56 }}>
+                            {name.trim()
+                                ? name
+                                    .split(" ")
+                                    .filter((word) => word.length > 0)
+                                    .map((word) => word[0].toUpperCase())
+                                    .slice(0, 2)
+                                    .join("")
+                                : ""}
+                        </Avatar>
 
-
-
-                            {/* Name Input */}
-                            <TextField
-                                className="!mb-8"
-                                label="Enter your name"
-                                fullWidth
-                                value={name}
-                                onChange={(e) => setName(e.target.value)} // Ensures spaces are not blocked
-                            />
-
-                        </Box>
-
-                        {/* Done Button */}
-                        <Button
-                            variant="contained"
-                            color="primary"
+                        {/* Name Input Field */}
+                        <TextField
+                            className="flex-1"
+                            label="Enter your name"
                             fullWidth
-                            onClick={handleDone}
-                            disabled={!name}
-                            className="py-3 text-lg rounded-xl shadow-lg hover:bg-blue-700 transition-all"
-                        >
-                            Done
-                        </Button>
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            onKeyDown={handleKeyDown} // 🔥 Supports Enter Key
+                        />
                     </Box>
+
+                    {/* Done Button */}
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        onClick={handleDone}
+                        disabled={!name.trim()}
+                        className="py-3 text-lg rounded-xl shadow-lg hover:bg-blue-700 transition-all"
+                    >
+                        Done
+                    </Button>
                 </Card>
             </div>
         </div>
