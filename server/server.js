@@ -356,6 +356,7 @@ server.post("/api/tasks/create",
             response.status(500).json({error: e})
             return
         }
+
         // todo: immediate instance create
         response.status(200).json({message: 'task created'})
     }
