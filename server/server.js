@@ -334,7 +334,7 @@ server.post("/api/tasks/create",
             response.status(400).json(validationErrs.mapped());
             return;
         }
-        const assigneeID = await dbGet("SELECT github FROM Users WHERE realName = ?", assignee);
+        const assigneeID = await dbGet("SELECT github FROM Users WHERE realName = ?", request.body.assignee);
         if (!assigneeID){
             response.status(400).json({error: "Assignee not found!"})
             return
