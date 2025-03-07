@@ -26,7 +26,7 @@ export default function Login() {
 
     // Check if user is already authenticated
     useEffect(() => {
-        fetch("http://localhost:3000/api/user", { credentials: "include" })
+        fetch("", { credentials: "include" })
             .then((res) => {
                 if (res.status === 401) {
                     setUser(null);
