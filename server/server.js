@@ -112,7 +112,7 @@ server.get("/api/woah", ensureAuth, async (request, response) => {
 server.get("/api/user", ensureAuth, async (request, response) => {
     const record = await dbGet("SELECT * FROM Users WHERE github = ?", request.user.username);
     if (!record) {
-        response.status(404).json({error: "User does not exist", username: request.params.github})
+        response.status(401).json({error: "User does not exist", username: request.params.github})
         return
     }
 
@@ -127,7 +127,7 @@ server.get("/api/user/by-id/:github", ensureAuth, async (request, response) => {
     // retrieve real name and profile pic
     const record = await dbGet("SELECT realName FROM Users WHERE github = ?", request.params.github);
     if (!record) {
-        response.status(404).json({error: "User does not exist", username: request.params.github})
+        response.status(401).json({error: "User does not exist", username: request.params.github})
         return
     }
     response.status(200).json({
@@ -313,6 +313,9 @@ server.post("/api/org/create",
             response.status(500).json({error: e})
             return
         }
+
+        const orgID = await dbGet("SELECT id FROM Organizations WHERE inviteCode = ?",code);
+        await dbRun("UPDATE Users SET orgID = ? WHERE github = ?", orgID.id, organizer);
         response.status(200).json({message: 'organization created', inviteCode: code})
     }
 );
