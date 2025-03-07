@@ -142,7 +142,7 @@ server.get("/api/org/users",
         const dat = await dbAll("SELECT realName FROM Users WHERE orgID = ?", myOrg);
         const userList = []
         dat.forEach(row => {
-            userList.push(dat.realName)
+            userList.push(row.realName)
         })
         res.status(200).json({users: userList})
     })
@@ -182,14 +182,14 @@ server.get('/api/org/inviteInfo',
     query("code").escape().isAlphanumeric().isLength(6),
     async (request, response) => {
 
-        sanitizationRes = validationResult(request);
+        const sanitizationRes = validationResult(request);
         if (!sanitizationRes.isEmpty()) {
             console.log("invite code validator fail: " + sanitizationRes.array())
             response.status(400).json({error: sanitizationRes.array()[0]})
             return
         }
-        invite = request.query.code
-        infos = await dbGet("SELECT name FROM Organizations WHERE inviteCode = ?", invite)
+        const invite = request.query.code
+        const infos = await dbGet("SELECT name FROM Organizations WHERE inviteCode = ?", invite)
         if (!infos) {
             response.status(404).json({error: "Invalid invite code"})
             return
@@ -267,6 +267,10 @@ server.post("/api/user/enroll",
     ensureAuth,
     body("inviteCode").isAlphanumeric().isLength(6),
     async (request, response) => {
+        const validationRes = validationResult(request);
+        if (!validationRes.isEmpty()){
+            response.status(400).json({error: validationRes.mapped()})
+        }
         const userRecord = await dbGet("SELECT * FROM Users WHERE github = ?", request.user.username)
         if (!userRecord) {
             response.status(400).json({error: 'User does not exist!!'})
@@ -330,7 +334,7 @@ server.post("/api/tasks/create",
             response.status(400).json(validationErrs.mapped());
             return;
         }
-        const assigneeID = await dbGet("SELECT github FROM Users WHERE realName = ?", assigneeID);
+        const assigneeID = await dbGet("SELECT github FROM Users WHERE realName = ?", assignee);
         if (!assigneeID){
             response.status(400).json({error: "Assignee not found!"})
             return
@@ -514,23 +518,6 @@ server.delete("/api/groceries/:id", async (req, res) => {
         res.status(500).json({ error: "Failed to delete item", details: error.message });
     }
 });
-
-server.post("/api/payments/add",
-    ensureAuth,
-    body('payer').isString(),
-    body("amountPaid").isFloat(),
-    body('description').isString(),
-    async (request, response) => {
-        const issues = validationResult(request)
-        if (!issues.isEmpty()){
-            console.log(issues.mapped())
-            response.status(400).json({error: "bad request parameters"})
-            return
-        }
-        // TODO: finish this function!
-
-    })
-
 
 // ------------------------ start server ------------------------
 async function startServer() {
