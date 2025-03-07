@@ -1,15 +1,17 @@
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { Link } from "react-router-dom";
 import { AppBar, Toolbar, Button, IconButton, Drawer, List, ListItem, Avatar, Menu, MenuItem, Box } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoSVG from "../assets/logo.svg";
 import { useUser } from "../context/UserContext"; // Import user context
 
+const BACKEND="http://127.0.0.1:3000"
+
 export default function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const { user } = useUser(); // Get user data (name, initials)
-
+    const [inviteCode, setInviteCode] = useState("Loading...");
     // Open/close mobile menu
     const toggleMobileMenu = () => {
         setMobileOpen(!mobileOpen);
@@ -23,10 +25,24 @@ export default function Navbar() {
         setAnchorEl(null);
     };
 
-    const generateUserCode = () => {
-        return Math.random().toString(36).substring(2, 8).toUpperCase();
-    };
-
+    const getInviteCode = async () => {
+        const res = await fetch(BACKEND+"/api/org/inviteCode", {
+            method: "GET",
+            credentials: "include"
+    })
+        if (!res.ok){
+            return "ERROR"
+        }
+        const data = await res.json()
+        setInviteCode(data.invite)
+    }
+    useEffect(() => {
+        async function fetchCode() {
+            const code = await getInviteCode();
+            setInviteCode(code);
+        }
+        fetchCode().then();
+    }, []);
     return (
         <>
             <AppBar position="fixed" sx={{ backgroundColor: "#f8f9fa" }}>
@@ -64,7 +80,7 @@ export default function Navbar() {
                         {/* Dropdown Menu */}
                         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
                             <MenuItem disabled>{user.name || "User"}</MenuItem>
-                            <MenuItem disabled>Code: {generateUserCode()}</MenuItem>
+                            <MenuItem disabled>Code: {inviteCode}</MenuItem>
                         </Menu>
 
                         {/* Mobile Menu Button */}
