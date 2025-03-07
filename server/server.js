@@ -8,6 +8,7 @@ const {query, body, validationResult} = require('express-validator');
 const sqlite3 = require('sqlite3')
 const {promisify} = require('util');
 const {response, request} = require("express");
+const settleDebts = require("./money");
 
 // constants
 const port = 3000
@@ -103,16 +104,11 @@ async function orgLookup(username) {
 
 // ------------------------ handle GET requests ------------------------
 
-// TODO delete
-server.get("/api/woah", ensureAuth, async (request, response) => {
-    response.status(200).json({test: "hi this is the server stuff is working"})
-});
-
 // Return current user's info
 server.get("/api/user", ensureAuth, async (request, response) => {
     const record = await dbGet("SELECT * FROM Users WHERE github = ?", request.user.username);
     if (!record) {
-        response.status(404).json({error: "User does not exist", username: request.params.github})
+        response.status(401).json({error: "User does not exist", username: request.params.github})
         return
     }
 
@@ -127,7 +123,7 @@ server.get("/api/user/by-id/:github", ensureAuth, async (request, response) => {
     // retrieve real name and profile pic
     const record = await dbGet("SELECT realName FROM Users WHERE github = ?", request.params.github);
     if (!record) {
-        response.status(404).json({error: "User does not exist", username: request.params.github})
+        response.status(401).json({error: "User does not exist", username: request.params.github})
         return
     }
     response.status(200).json({
@@ -144,7 +140,11 @@ server.get("/api/org/users",
             return
         }
         const dat = await dbAll("SELECT realName FROM Users WHERE orgID = ?", myOrg);
-        res.status(200).json({users: dat})
+        const userList = []
+        dat.forEach(row => {
+            userList.push(row.realName)
+        })
+        res.status(200).json({users: userList})
     })
 
 server.get("/api/org/:orgID/users", ensureAuth, async (request, response) => {
@@ -182,14 +182,14 @@ server.get('/api/org/inviteInfo',
     query("code").escape().isAlphanumeric().isLength(6),
     async (request, response) => {
 
-        sanitizationRes = validationResult(request);
+        const sanitizationRes = validationResult(request);
         if (!sanitizationRes.isEmpty()) {
             console.log("invite code validator fail: " + sanitizationRes.array())
             response.status(400).json({error: sanitizationRes.array()[0]})
             return
         }
-        invite = request.query.code
-        infos = await dbGet("SELECT name, description FROM Organizations WHERE inviteCode = ?", invite)
+        const invite = request.query.code
+        const infos = await dbGet("SELECT name FROM Organizations WHERE inviteCode = ?", invite)
         if (!infos) {
             response.status(404).json({error: "Invalid invite code"})
             return
@@ -208,18 +208,9 @@ server.get("/api/org/tasks/", ensureAuth, async (request, response) => {
     response.status(200).json(tasks);
 });
 
-server.get("/api/org/tasktypes", ensureAuth, async (request, response) => {
-    const orgID = await orgLookup(request.user.username)
-    const types = await dbAll("SELECT * FROM TaskTypes WHERE orgID = ?", orgID)
-    if (!types) {
-        response.status(404).json({error: "No task types found for organization", orgID: orgID});
-        return
-    }
-    response.status(200).json(types);
-});
 
 server.get("/api/user/tasks", ensureAuth, async (request, response) => {
-    const myTasks = await dbAll("SELECT * FROM TaskInstances WHERE assigneeID = ?", request.user.username);
+    const myTasks = await dbAll("SELECT * FROM Tasks WHERE assigneeID = ?", request.user.username);
     if (!myTasks) {
         response.status(404).json({error: "No tasks found for user", username: request.user.username});
         return
@@ -240,10 +231,6 @@ server.get("/api/tasks/:taskID", ensureAuth, async (request, response) => {
     }
     response.status(200).json(task);
 });
-
-server.get("/api/tasks/:taskID/instances", ensureAuth, async (request, response) => {
-    const taskID = request.params.taskID
-})
 
 // ------------------------ handle POST requests ------------------------
 
@@ -280,6 +267,10 @@ server.post("/api/user/enroll",
     ensureAuth,
     body("inviteCode").isAlphanumeric().isLength(6),
     async (request, response) => {
+        const validationRes = validationResult(request);
+        if (!validationRes.isEmpty()){
+            response.status(400).json({error: validationRes.mapped()})
+        }
         const userRecord = await dbGet("SELECT * FROM Users WHERE github = ?", request.user.username)
         if (!userRecord) {
             response.status(400).json({error: 'User does not exist!!'})
@@ -335,105 +326,61 @@ server.post("/api/tasks/create",
     ensureAuth,
     body('title').isString().escape(),
     body('type').isString().escape(),
-    body('schedule').optional().isString(),
+    body('duedate').optional().isString(),
+    body("assignee").isString(),
     async (request, response) => {
-        const task = request.body
-        const orgID = await orgLookup(request.user.username)
-        if (!orgID) {
-            response.status(400).json({error: 'Organization identifier invalid'})
+        const validationErrs = validationResult(request);
+        if (!validationErrs.isEmpty()){
+            response.status(400).json(validationErrs.mapped());
+            return;
+        }
+        const assigneeID = await dbGet("SELECT github FROM Users WHERE realName = ?", assignee);
+        if (!assigneeID){
+            response.status(400).json({error: "Assignee not found!"})
             return
         }
-        // check that the task type is valid for this organization
-        const typeRow = await dbGet("SELECT * FROM TaskTypes WHERE orgID = ? AND name = ?", orgID, task.type)
-        if (!typeRow) {
-            response.status(400).json({error: 'Invalid task type'})
-            return
-        }
-        try {
-            await dbRun("INSERT INTO Tasks (orgID, name, description, taskTypeID, schedule) VALUES (?, ?, ?, ?)",
-                orgID, task.title, typeRow.id, task.schedule)
-        } catch (e) {
-            response.status(500).json({error: e})
-            return
-        }
-
-        // todo: immediate instance create
-        response.status(200).json({message: 'task created'})
+        const orgID = orgLookup(request.user.username);
+        await dbRun("INSERT INTO Tasks (taskType, name, orgID, dueDate, assigneeID, status) VALUES (?,?,?,?,?)",
+            request.body.type, request.body.title, orgID, request.body.duedate, request.body.assignee, "Pending");
     }
 );
 
-server.post('/api/tasks/instance/assign',
-    ensureAuth,
-    body("assignee").isString().escape(),
-    body("instanceID").isNumeric(),
-    async (request, response) => {
-
-        const instanceId = request.body.instanceID;
-        const userRecord = await dbGet("SELECT * FROM Users WHERE github = ?", request.body.assignee);
-        if (!userRecord) {
-            response.status(400).json({error: 'User does not exist'})
-            return
-        }
-        const orgID = await orgLookup(request.user.username);
-        const instanceRecord = await dbGet("SELECT * FROM TaskInstances WHERE id = ?", instanceId);
-        if (!instanceRecord) {
-            response.status(400).json({error: 'Task Instance does not exist!'})
-            return
-        }
-        const taskOrg = await dbGet("SELECT orgID FROM Tasks WHERE id=?", instanceRecord.taskID);
-        if (userRecord.orgID !== orgID || taskOrg !== orgID) {
-            response.status(403).json({error: "Cross-org assignment not supported"})
-        }
-        let prevAssignee = null
-        if (instanceRecord.assigneeID) {
-            console.log("Warning: overwriting assignee for taskInstance " + instanceId)
-            prevAssignee = instanceRecord.assigneeID
-        }
-        await dbRun("UPDATE TaskInstances SET assigneeID = ? WHERE id = ?", request.body.assignee, instanceId)
-        response.status(200).json({
-            message: 'task assigned',
-            assignee: request.body.assignee,
-            prevAssignee: prevAssignee
-        })
-    }
-)
-
 server.post('/api/tasks/instance/complete',
     ensureAuth,
-    body("instanceID").isNumeric(),
+    body("taskID").isNumeric(),
     async (request, response) => {
-        const instanceRecord = await dbGet("SELECT * FROM TaskInstances WHERE id = ?", request.body.instanceID);
-        if (!instanceRecord) {
-            response.status(404).json({error: 'Task Instance does not exist'});
-            return;
+        const taskRecord = await dbGet("SELECT dueDate, orgID from Tasks WHERE id = ?", request.body.taskID);
+        if (!taskRecord) {
+            response.status(400).json({error: "task does not exist"})
+            return
         }
-        if (instanceRecord.assigneeID !== request.user.username) {
-            response.status(403).json({error: 'Not your task'})
-            return;
+        if (await orgLookup(request.user.username) !== taskRecord.orgID){
+            response.status(403).json({error: "not your org!"})
         }
-        let status = 'completed'
-        if ((new Date()) > (new Date(instanceRecord.dueDate))) {
-            status += ' (late)'
+        let status = "Done"
+        if (new Date(taskRecord.dueDate) < new Date()) {
+            status = "Done (Late)"
         }
-        await dbRun("UPDATE TaskInstances SET status=? WHERE id=?", status, request.body.instanceID)
-        response.status(200)
+        await dbRun("UPDATE Tasks SET status = ? WHERE id = ?", status, request.body.taskID)
+        response.status(200).json({status: status});
     }
+
 )
 
 server.post("/api/tasks/instance/cancel",
     ensureAuth,
-    body("instanceID").isNumeric(),
+    body("taskID").isNumeric(),
     async (request, response) => {
-        const record = await dbGet("SELECT * FROM TaskInstances I INNER JOIN Tasks T on I.taskID = T.id WHERE I.id = ?")
+        const record = await dbGet("SELECT orgID FROM Tasks WHERE id = ?",request.body.taskID)
         if (!record) {
             response.status(404).json({error: "no matching task instance!"})
             return
         }
-        if (record.orgID !== orgLookup(request.user.username)) {
+        if (record.orgID !== await orgLookup(request.user.username)) {
             response.status(403).json({error: "Not authorized, not your org!"})
             return
         }
-        await dbRun("UPDATE TaskInstances SET status = ? WHERE id=?", "cancelled", request.body.instanceID);
+        await dbRun("UPDATE Tasks SET status = ? WHERE id=?", "cancelled", request.body.taskID);
         response.status(200).json({status: "ok"})
 
     }
@@ -488,50 +435,59 @@ server.post("/api/payments/complete",
 server.get("/api/payments/resolve",
     ensureAuth,
     async (request, response) => {
-
+        const myOrg = orgLookup(request.user.username)
+        const userData = await dbAll("SELECT realName FROM Users WHERE orgID = ?",myOrg);
+        const paymentData = await dbAll("SELECT E.payerID, E.amountPaid FROM Expenses E JOIN Users U ON E.payerID = U.github WHERE U.orgID = ? AND E.paidOff = 0", myOrg)
+        if (!userList || !paymentData){
+            console.log("DB returned bad vals! exit.")
+            response.code(500).json({error: "failed"});
+            return
+        }
+        // prepare data for algs
+        let userList = []
+        let payOut = []
+        userData.forEach(row=>{
+            userList.push(row.realName)
+        })
+        paymentData.forEach(row=>{
+            const tmp = {
+                spender: row.payerID,
+                 value: row.amountPaid
+            }
+            payOut.push(tmp)
+        })
+        const resolutions = settleDebts(userList, payOut);
+        response.status(200).json(resolutions)
     })
 
 
-// ✅ Fetch all groceries (filtered by organization)
+// ✅ Fetch all groceries (TODO filter by organization)
 server.get("/api/groceries", async (req, res) => {
     try {
         console.log("GET /api/groceries called");
 
-        const userOrg = await orgLookup(req.headers["x-username"]);
-        if (!userOrg) {
-            return res.status(400).json({error: "User is not in an organization"});
-        }
-
-        const groceries = await dbAll("SELECT * FROM Inventory WHERE orgID = ?", userOrg.orgID);
+        const groceries = await dbAll("SELECT * FROM Inventory");
         console.log("Fetched groceries:", groceries);
 
         res.status(200).json(groceries);
     } catch (error) {
         console.error("Error fetching groceries:", error);
-        res.status(500).json({error: "Failed to fetch inventory", details: error.message});
+        res.status(500).json({ error: "Failed to fetch inventory", details: error.message });
     }
 });
 
-
 // ✅ Add a new grocery item
 server.post("/api/groceries", async (req, res) => {
-    const {name, description, quantity, location, notes, listType} = req.body;
+    const { name, quantity } = req.body;
+
     console.log("Received POST request:", req.body);
 
+    if (!name || quantity === undefined) {
+        return res.status(400).json({ error: "Name and quantity are required" });
+    }
+
     try {
-        const userOrg = await orgLookup(req.headers["x-username"]);
-        if (!userOrg) {
-            return res.status(400).json({error: "User is not in an organization"});
-        }
-
-        if (!["inventory", "needed"].includes(listType)) {
-            return res.status(400).json({error: "Invalid listType. Must be 'inventory' or 'needed'."});
-        }
-
-        await dbRun(
-            "INSERT INTO Inventory (orgID, name, description, quantity, location, notes, listType) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            userOrg.orgID, name, description, quantity, location, notes, listType
-        );
+        await dbRun("INSERT INTO Inventory (name, quantity) VALUES (?, ?)", name, quantity);
 
         const newItem = await dbGet("SELECT * FROM Inventory ORDER BY id DESC LIMIT 1");
         console.log("New item added:", newItem);
@@ -539,64 +495,27 @@ server.post("/api/groceries", async (req, res) => {
         res.status(201).json(newItem);
     } catch (error) {
         console.error("Error adding item:", error);
-        res.status(500).json({error: "Failed to add item", details: error.message});
-    }
-});
-
-// ✅ Move an item from Needed to Inventory
-server.put("/api/groceries/:id", ensureAuth, async (req, res) => {
-    const {listType} = req.body;
-    const itemId = req.params.id;
-
-    try {
-        const userOrg = await orgLookup(req.user.username);
-        if (!userOrg) {
-            return res.status(400).json({error: "User is not in an organization"});
-        }
-
-        const item = await dbGet("SELECT * FROM Inventory WHERE id = ? AND orgID = ?", itemId, userOrg.orgID);
-        if (!item) {
-            return res.status(404).json({error: "Item not found or not in your organization"});
-        }
-
-        if (!["inventory", "needed"].includes(listType)) {
-            return res.status(400).json({error: "Invalid listType. Must be 'inventory' or 'needed'."});
-        }
-
-        await dbRun("UPDATE Inventory SET listType = ? WHERE id = ?", listType, itemId);
-
-        const updatedItem = await dbGet("SELECT * FROM Inventory WHERE id = ?", itemId);
-        console.log("Item moved:", updatedItem);
-
-        res.status(200).json(updatedItem);
-    } catch (error) {
-        console.error("Error moving item:", error);
-        res.status(500).json({error: "Failed to move item", details: error.message});
+        res.status(500).json({ error: "Failed to add item", details: error.message });
     }
 });
 
 // ✅ Delete a grocery item
-server.delete("/api/groceries/:id", ensureAuth, async (req, res) => {
+server.delete("/api/groceries/:id", async (req, res) => {
     const itemId = req.params.id;
 
     try {
-        const userOrg = await orgLookup(req.user.username);
-        if (!userOrg) {
-            return res.status(400).json({error: "User is not in an organization"});
-        }
-
-        const item = await dbGet("SELECT * FROM Inventory WHERE id = ? AND orgID = ?", itemId, userOrg.orgID);
+        const item = await dbGet("SELECT * FROM Inventory WHERE id = ?", itemId);
         if (!item) {
-            return res.status(404).json({error: "Item not found or not in your organization"});
+            return res.status(404).json({ error: "Item not found" });
         }
 
         await dbRun("DELETE FROM Inventory WHERE id = ?", itemId);
         console.log("Deleted item ID:", itemId);
 
-        res.status(200).json({message: "Item deleted successfully"});
+        res.status(200).json({ message: "Item deleted successfully" });
     } catch (error) {
         console.error("Error deleting item:", error);
-        res.status(500).json({error: "Failed to delete item", details: error.message});
+        res.status(500).json({ error: "Failed to delete item", details: error.message });
     }
 });
 

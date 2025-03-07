@@ -17,49 +17,24 @@ CREATE TABLE IF NOT EXISTS Users
     FOREIGN KEY (orgID) REFERENCES Organizations (id)
 );
 
-CREATE TABLE IF NOT EXISTS TaskTypes
-(
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    orgID       INTEGER NOT NULL,
-    name        TEXT    NOT NULL,
-    description TEXT,
-    FOREIGN KEY (orgID) REFERENCES Organizations (id)
-);
-
 CREATE TABLE IF NOT EXISTS Tasks
 (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    orgID       INTEGER NOT NULL,
-    taskTypeID  INTEGER NOT NULL,
+    taskType    TEXT,
     name        TEXT    NOT NULL,
+    orgID       INTEGER NOT NULL,
     description TEXT,
-    schedule    TEXT,
+    assigneeID  TEXT,
+    status      TEXT    NOT NULL,
+    dueDate     TEXT,
     FOREIGN KEY (orgID) REFERENCES Organizations (id),
-    FOREIGN KEY (taskTypeID) REFERENCES TaskTypes (id)
-);
-
-CREATE TABLE IF NOT EXISTS TaskInstances
-(
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    taskID         INTEGER NOT NULL,
-    assigneeID     TEXT,
-    status         TEXT    NOT NULL,
-    dueDate        TEXT,
-    completionDate TEXT,
-    FOREIGN KEY (taskID) REFERENCES Tasks (id),
     FOREIGN KEY (assigneeID) REFERENCES Users (github)
 );
 
 CREATE TABLE IF NOT EXISTS Inventory
 (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    orgID       INTEGER NOT NULL,
-    name        TEXT    NOT NULL,
-    description TEXT,
-    quantity    INTEGER NOT NULL,
-    location    TEXT,
-    notes       TEXT,
-    FOREIGN KEY (orgID) REFERENCES Organizations (id)
+    name     TEXT    NOT NULL,
+    quantity INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Expenses
@@ -67,7 +42,7 @@ CREATE TABLE IF NOT EXISTS Expenses
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     description TEXT NOT NULL,
     payerID     TEXT,
-    amountPaid REAL NOT NULL,
-    paidOff    INTEGER DEFAULT 0,
+    amountPaid  REAL NOT NULL,
+    paidOff     INTEGER DEFAULT 0,
     FOREIGN KEY (payerID) REFERENCES Users (github)
 );
