@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { AddCircleOutline } from "@mui/icons-material";
-import { TextField, Select, MenuItem, FormControl, InputLabel, Button } from "@mui/material";
+import {TextField, Select, MenuItem, FormControl, InputLabel, Button, Autocomplete} from "@mui/material";
 
 export default function ChoreApp() {
     const [chores, setChores] = useState({});
     const [categories] = useState(["Cleaning", "Kitchen", "Trash", "Others"]);
     const [selectedCategory, setSelectedCategory] = useState("Cleaning");
     const [showForm, setShowForm] = useState(false);
+    const [people, setPeople] = useState([]);
     const [triggerUseEffect, setTriggerUseEffect] = useState(false);
     const [newChore, setNewChore] = useState({
         name: "",
@@ -37,6 +38,26 @@ export default function ChoreApp() {
 
         fetchChores();
     }, [selectedCategory, triggerUseEffect]);
+
+    useEffect(() => {
+        const fetchPeople = async () => {
+            try{
+                const resp = await fetch("http://localhost:3000/api/org/users", {
+                    method: "GET",
+                    credentials: "include"
+                })
+                if (resp.ok){
+                    const peopleList = await resp.json()
+                    setPeople(peopleList.users)
+                }
+            }
+            catch (e){
+                console.log("err:"+e)
+
+            }
+        }
+        fetchPeople().then()
+    }, []);
 
     const deleteTask = async (taskID) => {
         try {
@@ -186,14 +207,19 @@ export default function ChoreApp() {
                                 onChange={(e) => setNewChore({ ...newChore, deadline: e.target.value })}
                                 className="!mb-5"
                             />
-
-                            <TextField
-                                label="Assign To"
-                                variant="outlined"
+                            <Autocomplete
+                                disablePortal
+                                options={people}
                                 fullWidth
-                                value={newChore.assignee}
-                                onChange={(e) => setNewChore({ ...newChore, assignee: e.target.value })}
-                                className="!mb-5"
+                                renderInput={(params) => <TextField
+                                    {...params}
+                                    label="Assign To"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={newChore.assignee}
+                                    onChange={(e) => setNewChore({ ...newChore, assignee: e.target.value })}
+                                    className="!mb-5"
+                                />}
                             />
 
                             <FormControl fullWidth variant="outlined" className="!mb-5">
